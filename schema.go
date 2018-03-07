@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/jinzhu/gorm"
-	"github.com/rightjoin/txt"
+	"github.com/rightjoin/utila/txt"
 )
 
 var SchemaDB *gorm.DB

@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"bitbucket.org/rightjoin/ion/db"
-	"github.com/rightjoin/txt"
+	"github.com/rightjoin/utila/txt"
 )
 
 type PK struct {
