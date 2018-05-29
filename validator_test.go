@@ -95,32 +95,32 @@ func TestJson(t *testing.T) {
 	// passing string is a problem
 	ok, _ := validateModel(&Abc{}, map[string]string{"ptr_arr": "stringy"}, "insert")
 	assert.False(t, ok)
-	// ok, _ = validateModel(&Abc{}, map[string]string{"ptr_arr": "stringy"}, "update")
-	// assert.False(t, ok)
+	ok, _ = validateModel(&Abc{}, map[string]string{"ptr_arr": "stringy"}, "update")
+	assert.False(t, ok)
 
-	// // passing array of int
-	// ok, _ = validateModel(&Abc{}, map[string]string{"arr": "[1,2,3]"}, "insert")
-	// assert.True(t, ok)
-	// ok, _ = validateModel(&Abc{}, map[string]string{"ptr_arr": "[1,2,3]"}, "update")
-	// assert.True(t, ok)
+	// passing array of int
+	ok, _ = validateModel(&Abc{}, map[string]string{"arr": "[1,2,3]"}, "insert")
+	assert.True(t, ok)
+	ok, _ = validateModel(&Abc{}, map[string]string{"ptr_arr": "[1,2,3]"}, "update")
+	assert.True(t, ok)
 
-	// // document validations:
+	// document validations:
 
-	// // passing string is a problem
-	// ok, _ = validateModel(&Abc{}, map[string]string{"doc": "stringy"}, "insert")
-	// assert.False(t, ok)
-	// ok, _ = validateModel(&Abc{}, map[string]string{"ptr_doc": "stringy"}, "update")
-	// assert.False(t, ok)
+	// passing string is a problem
+	ok, _ = validateModel(&Abc{}, map[string]string{"doc": "stringy"}, "insert")
+	assert.False(t, ok)
+	ok, _ = validateModel(&Abc{}, map[string]string{"ptr_doc": "stringy"}, "update")
+	assert.False(t, ok)
 
-	// // passing array is a problem
-	// ok, _ = validateModel(&Abc{}, map[string]string{"doc": "[1,2,3]"}, "insert")
-	// assert.False(t, ok)
-	// ok, _ = validateModel(&Abc{}, map[string]string{"ptr_doc": "[1,2,3]"}, "update")
-	// assert.False(t, ok)
+	// passing array is a problem
+	ok, _ = validateModel(&Abc{}, map[string]string{"doc": "[1,2,3]"}, "insert")
+	assert.False(t, ok)
+	ok, _ = validateModel(&Abc{}, map[string]string{"ptr_doc": "[1,2,3]"}, "update")
+	assert.False(t, ok)
 
-	// // passing document
-	// ok, _ = validateModel(&Abc{}, map[string]string{"doc": `{"key":"value"}`}, "insert")
-	// assert.True(t, ok)
-	// ok, _ = validateModel(&Abc{}, map[string]string{"ptr_doc": `{"key":"value"}`}, "update")
-	// assert.True(t, ok)
+	// passing document
+	ok, _ = validateModel(&Abc{}, map[string]string{"doc": `{"key":"value"}`}, "insert")
+	assert.True(t, ok)
+	ok, _ = validateModel(&Abc{}, map[string]string{"ptr_doc": `{"key":"value"}`}, "update")
+	assert.True(t, ok)
 }
