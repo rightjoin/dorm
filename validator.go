@@ -6,7 +6,6 @@ import (
 	"reflect"
 	"strings"
 
-	refl2 "bitbucket.org/rightjoin/ion/refl"
 	"github.com/asaskevich/govalidator"
 	"github.com/rightjoin/utila/refl"
 	"github.com/rightjoin/utila/txt"
@@ -39,10 +38,9 @@ func validateModel(modl interface{}, data map[string]string, action string) (boo
 		fname := fld.Name
 		sqlName := txt.CaseSnake(fname)
 		sig := signature(fld.Type)
-		sig2 := refl2.TypeSignature(fld.Type)
 		_, hasData := data[sqlName]
 
-		fmt.Println("SQLName:", sqlName, "SIGNATURE:", sig, sig2, "FOUND:", hasData, "FLDTYPE:", fld.Type)
+		// fmt.Println("SQLName:", sqlName, "SIGNATURE:", sig, "FOUND:", hasData, "FLDTYPE:", fld.Type)
 
 		// auto trim string fields unless "trim" set to "no"
 		if hasData && (sig == "string" || sig == "*string") && fld.Tag.Get("trim") != "no" {
@@ -92,8 +90,6 @@ func validateModel(modl interface{}, data map[string]string, action string) (boo
 						errs = append(errs, fmt.Errorf("json array of string expected during %s: %s.%s", action, mname, sqlName))
 					}
 				}
-			default:
-				panic("stopping")
 			}
 		}
 
