@@ -121,6 +121,11 @@ func Update(dbo *gorm.DB, pkField string, pkValue interface{}, addr interface{},
 	return txn.Commit().Error
 }
 
+// prepareData takes a set of inputs and converts it into a map[string]string.
+// If there is only one input and it happens to be a map[string]string it
+// is used as return value. If this input happens to be a map[string]interface{}
+// then it gets converted into map[string]string. If neither then the input
+// is treated as a series of key-value pairs.
 func prepareData(data ...interface{}) map[string]string {
 
 	var inp map[string]interface{}
