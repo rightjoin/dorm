@@ -4,7 +4,6 @@ import (
 	"reflect"
 	"time"
 
-	"bitbucket.org/rightjoin/ion/db"
 	"github.com/rightjoin/utila/txt"
 )
 
@@ -24,13 +23,43 @@ type Timed struct {
 type Historic struct {
 }
 
+type WhosThat struct {
+	// Who values should never be passed in POST variables
+	Who *JDoc `sql:"TYPE:json" json:"-" insert:"no" update:"no"`
+}
+
+type Active1 struct {
+	Active uint8 `sql:"TYPE:tinyint(1) unsigned;not null;DEFAULT:'1'" json:"active"`
+}
+
+type Active0 struct {
+	Active uint8 `sql:"TYPE:tinyint(1) unsigned;not null;DEFAULT:'0'" json:"active"`
+}
+
+type Tagged struct {
+	Tags *JArr `sql:"TYPE:json;" json:"tags"`
+}
+
+type Ordered struct {
+	Sequence uint `sql:"not null;DEFAULT:'1'" json:"sequence"`
+}
+
+type SoftDelete struct {
+	Deleted   uint8      `sql:"TYPE:tinyint(1) unsigned;not null;DEFAULT:'0'" json:"deleted" insert:"no" index:"true"`
+	DeletedAt *time.Time `sql:"TYPE:datetime;null;" json:"deleted_at" insert:"no" update:"no"`
+}
+
+type DynamicField struct {
+	Info *JDoc `sql:"TYPE:json" json:"info"`
+}
+
 type Seo struct {
-	URL          string   `sql:"TYPE:varchar(256);not null;DEFAULT:''" json:"url" unique:"true"`
-	URLPast      *db.JArr `sql:"TYPE:json;" json:"-" insert:"no" update:"no"`
-	MetaTitle    string   `sql:"TYPE:varchar(256);not null;DEFAULT:''" json:"meta_title"`
-	MetaDesc     string   `sql:"TYPE:varchar(256);not null;DEFAULT:''" json:"meta_desc"`
-	MetaKeywords string   `sql:"TYPE:varchar(256);not null;DEFAULT:''" json:"meta_keywords"`
-	Sitemap      uint8    `sql:"TYPE:tinyint(1) unsigned;not null;DEFAULT:'1'" json:"sitemap"`
+	URL          string `sql:"TYPE:varchar(256);not null;DEFAULT:''" json:"url" unique:"true"`
+	URLPast      *JArr  `sql:"TYPE:json;" json:"-" insert:"no" update:"no"`
+	MetaTitle    string `sql:"TYPE:varchar(256);not null;DEFAULT:''" json:"meta_title"`
+	MetaDesc     string `sql:"TYPE:varchar(256);not null;DEFAULT:''" json:"meta_desc"`
+	MetaKeywords string `sql:"TYPE:varchar(256);not null;DEFAULT:''" json:"meta_keywords"`
+	Sitemap      uint8  `sql:"TYPE:tinyint(1) unsigned;not null;DEFAULT:'1'" json:"sitemap"`
 }
 
 // UrlColumn gives you the column/field to be used to supply text

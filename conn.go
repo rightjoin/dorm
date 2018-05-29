@@ -25,6 +25,8 @@ var initializations = []func(*gorm.DB){
 }
 
 func OnInitialize(fn func(*gorm.DB)) {
+	// http://www.alexedwards.net/blog/configuring-sqldb
+	// http://techblog.en.klab-blogs.com/archives/31093990.html
 	initializations = append(initializations, fn)
 }
 

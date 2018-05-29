@@ -5,10 +5,16 @@ import (
 	"strings"
 
 	"github.com/jinzhu/gorm"
+	"github.com/rightjoin/fig"
+	"github.com/rightjoin/utila/refl"
 	"github.com/rightjoin/utila/txt"
 )
 
-var SchemaDB *gorm.DB
+// DBConn can be used to override the default connection
+// that dorm uses for building schema and population.
+// It picks up database.master to do these operations, but
+// this can be overridden by DBConn variable
+var DBConn *gorm.DB
 
 // simple & static behaviours
 var behave = map[interface{}][]string{}
@@ -21,14 +27,26 @@ type triggered interface {
 	Triggers() []string
 }
 
+// db provides the gorm db connection on which
+// all operations of building schema and population
+// are performed
+func db() *gorm.DB {
+	if DBConn != nil {
+		return DBConn
+	}
+	return GetORM(true)
+}
+
 func BuildSchema(models ...interface{}) {
-	if SchemaDB == nil {
-		panic("SchemaDB is null. Please specify the DB to populate")
+
+	// validations
+	if db() == nil {
+		panic("connection is null. Please specify the DB to populate")
 	}
 
 	// migrate (build basic tables)
 	for _, model := range models {
-		e := SchemaDB.AutoMigrate(model).Error
+		e := db().AutoMigrate(model).Error
 		if e != nil {
 			panic(e)
 		}
@@ -36,7 +54,7 @@ func BuildSchema(models ...interface{}) {
 
 	// build history log
 	for _, model := range models {
-		if composedOf(model, Historic{}) {
+		if refl.ComposedOf(model, Historic{}) {
 			setupHistoricAuditLog(model)
 		}
 	}
@@ -69,24 +87,36 @@ func BuildSchema(models ...interface{}) {
 
 func NewDB(name string) {
 
+	// don't use master db connection, as it
+	// will try to connect to a non-existing database.
+	schema := DBConn
+	if schema == nil {
+		engine := fig.String("database.master.engine")
+		conn := GetCstr(engine, "database.master")
+
+		// replace db name with information_schema
+		conn = strings.Replace(conn, fig.String("database.master.db"), "information_schema", -1)
+		schema = GetORMCstr(engine, conn)
+	}
+
 	// save current db name
 	type Dbname struct {
 		Name string `json:"name"`
 	}
 	var cur Dbname
-	err := SchemaDB.Raw("SELECT DATABASE() AS name").Find(&cur).Error
+	err := schema.Raw("SELECT DATABASE() AS name").Find(&cur).Error
 	if err != nil {
 		panic(err)
 	}
 
 	// create new db
-	err = SchemaDB.Exec("CREATE DATABASE IF NOT EXISTS " + name + " CHARACTER SET utf8 COLLATE utf8_general_ci").Error
+	err = schema.Exec("CREATE DATABASE IF NOT EXISTS " + name + " CHARACTER SET utf8 COLLATE utf8_general_ci").Error
 	if err != nil {
 		panic(err)
 	}
 
 	// switch to new db
-	err = SchemaDB.Exec("USE " + name).Error
+	err = schema.Exec("USE " + name).Error
 	if err != nil {
 		panic(err)
 	}
@@ -94,7 +124,7 @@ func NewDB(name string) {
 	// create the needed functions::
 
 	// function: url cleanup
-	err = SchemaDB.Exec(`CREATE FUNCTION geturl( str VARCHAR(256) ) RETURNS VARCHAR(256)
+	err = schema.Exec(`CREATE FUNCTION geturl( str VARCHAR(256) ) RETURNS VARCHAR(256)
 	BEGIN
 		DECLARE i, len SMALLINT DEFAULT 1;
 		DECLARE ret VARCHAR(256) DEFAULT '';
@@ -129,7 +159,7 @@ func NewDB(name string) {
 	}
 
 	// function: random string generator
-	err = SchemaDB.Exec(`CREATE FUNCTION randstr (length SMALLINT(3)) RETURNS varchar(100)
+	err = schema.Exec(`CREATE FUNCTION randstr (length SMALLINT(3)) RETURNS varchar(100)
 	BEGIN
 		SET @returnStr = '';
 		SET @allowedChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -147,7 +177,7 @@ func NewDB(name string) {
 	}
 
 	// switch back to original database for the connection
-	err = SchemaDB.Exec("USE " + cur.Name).Error
+	err = schema.Exec("USE " + cur.Name).Error
 	if err != nil {
 		panic(err)
 	}
@@ -155,7 +185,7 @@ func NewDB(name string) {
 
 func Populate(records ...interface{}) {
 	for _, row := range records {
-		txn := SchemaDB.Begin()
+		txn := db().Begin()
 
 		err := txn.Create(row).Error
 		if err != nil {
@@ -173,7 +203,7 @@ func Populate(records ...interface{}) {
 // unique:"idx_name"
 // unique:"idx_name(field1,field2)"
 func setupUniqueIndexes(model interface{}) {
-	fields := nestedFields(model)
+	fields := refl.NestedFields(model)
 	for i := 0; i < len(fields); i++ {
 		fld := fields[i]
 		if len(fld.Tag.Get("unique")) > 0 {
@@ -183,7 +213,7 @@ func setupUniqueIndexes(model interface{}) {
 			}
 			lbrace := strings.Index(name, "(")
 			if lbrace == -1 {
-				err := SchemaDB.Model(model).AddUniqueIndex(name, txt.CaseSnake(fld.Name)).Error
+				err := db().Model(model).AddUniqueIndex(name, txt.CaseSnake(fld.Name)).Error
 				if err != nil {
 					panic(err)
 				}
@@ -193,7 +223,7 @@ func setupUniqueIndexes(model interface{}) {
 				for i := range flds {
 					flds[i] = strings.TrimSpace(flds[i])
 				}
-				err := SchemaDB.Model(model).AddUniqueIndex(name[:lbrace], flds...).Error
+				err := db().Model(model).AddUniqueIndex(name[:lbrace], flds...).Error
 				if err != nil {
 					panic(err)
 				}
@@ -209,7 +239,7 @@ func setupUniqueIndexes(model interface{}) {
 // index:"idx_name"
 // index:"idx_name(field1,field2)"
 func setupIndexes(model interface{}) {
-	fields := nestedFields(reflect.ValueOf(model).Elem().Interface())
+	fields := refl.NestedFields(reflect.ValueOf(model).Elem().Interface())
 	for i := 0; i < len(fields); i++ {
 		fld := fields[i]
 		if len(fld.Tag.Get("index")) > 0 {
@@ -219,7 +249,7 @@ func setupIndexes(model interface{}) {
 			}
 			lbrace := strings.Index(name, "(")
 			if lbrace == -1 {
-				err := SchemaDB.Model(model).AddIndex(name, txt.CaseSnake(fld.Name)).Error
+				err := db().Model(model).AddIndex(name, txt.CaseSnake(fld.Name)).Error
 				if err != nil {
 					panic(err)
 				}
@@ -229,7 +259,7 @@ func setupIndexes(model interface{}) {
 				for i := range flds {
 					flds[i] = strings.TrimSpace(flds[i])
 				}
-				err := SchemaDB.Model(model).AddIndex(name[:lbrace], flds...).Error
+				err := db().Model(model).AddIndex(name[:lbrace], flds...).Error
 				if err != nil {
 					panic(err)
 				}
@@ -250,7 +280,7 @@ func setupForeignKeys(model interface{}) {
 		tag := fld.Tag
 		if len(tag.Get("fk")) > 0 {
 			fk := txt.CaseSnake(fld.Name)
-			err := SchemaDB.Model(model).AddForeignKey(fk, tag.Get("fk"), "RESTRICT", "RESTRICT").Error
+			err := db().Model(model).AddForeignKey(fk, tag.Get("fk"), "RESTRICT", "RESTRICT").Error
 			if err != nil {
 				panic(err)
 			}
@@ -265,7 +295,7 @@ func setupCustomTriggers(model interface{}) {
 	if m, ok := model.(triggered); ok {
 		triggers := m.Triggers()
 		for _, trig := range triggers {
-			err := SchemaDB.Exec(trig).Error
+			err := db().Exec(trig).Error
 			if err != nil {
 				panic(err)
 			}
@@ -284,7 +314,7 @@ func setupBehaviors(model interface{}) {
 
 	exec := func(inp string) {
 		inp = strings.Replace(inp, "<<Table>>", tbl, -1)
-		err := SchemaDB.Exec(inp).Error
+		err := db().Exec(inp).Error
 		if err != nil {
 			panic(err)
 		}
@@ -292,7 +322,7 @@ func setupBehaviors(model interface{}) {
 
 	// static behaviors
 	for obj, triggs := range behave {
-		if composedOf(model, obj) {
+		if refl.ComposedOf(model, obj) {
 			for _, t := range triggs {
 				exec(t)
 			}
@@ -301,7 +331,7 @@ func setupBehaviors(model interface{}) {
 
 	// dynamic behaviors
 	for obj, fn := range behaveModel {
-		if composedOf(model, obj) {
+		if refl.ComposedOf(model, obj) {
 			triggs := fn(model)
 			for _, t := range triggs {
 				exec(t)
@@ -319,7 +349,7 @@ func setupHistoricAuditLog(model interface{}) {
 	exec := func(inp string) {
 		inp = strings.Replace(inp, "<<Table>>", hist, -1)
 		inp = strings.Replace(inp, "<<TableOrig>>", tbl, -1)
-		err := SchemaDB.Exec(inp).Error
+		err := db().Exec(inp).Error
 		if err != nil {
 			panic(err)
 		}
@@ -351,7 +381,7 @@ func setupHistoricAuditLog(model interface{}) {
 
 	// remove auto increment (if any)
 	sql := "SHOW COLUMNS FROM " + hist + " WHERE Extra LIKE '%auto_increment%'"
-	err := SchemaDB.Raw(sql).Find(&flds).Error
+	err := db().Raw(sql).Find(&flds).Error
 	if err != nil {
 		panic(err)
 	}
@@ -363,7 +393,7 @@ func setupHistoricAuditLog(model interface{}) {
 
 	// drop primary key (if any)
 	sql = "SHOW COLUMNS FROM " + hist + " WHERE `Key` = 'PRI'"
-	err = SchemaDB.Raw(sql).Find(&flds).Error
+	err = db().Raw(sql).Find(&flds).Error
 	if err != nil {
 		panic(err)
 	}
@@ -395,81 +425,4 @@ func setupHistoricAuditLog(model interface{}) {
         INSERT INTO <<Table>> SELECT null,'delete',NOW(), src.* 
         FROM <<TableOrig>> as src WHERE src.id = OLD.id;`)
 
-}
-
-func tableName(model interface{}) string {
-	t := reflect.TypeOf(model)
-	v := reflect.ValueOf(model)
-	if t.Kind() == reflect.Ptr {
-		t = t.Elem()
-		v = v.Elem()
-	}
-
-	if _, ok := t.MethodByName("TableName"); ok {
-		name := v.MethodByName("TableName").Call([]reflect.Value{})
-		return name[0].String()
-	}
-	return txt.CaseSnake(t.Name())
-}
-
-func nestedFields(obj interface{}) []reflect.StructField {
-
-	var fields = make([]reflect.StructField, 0)
-
-	ot := reflect.TypeOf(obj)
-	ov := reflect.ValueOf(obj)
-
-	// dereference
-	if ot.Kind() == reflect.Ptr {
-		ot = ot.Elem()
-		ov = ov.Elem()
-	}
-
-	for i := 0; i < ot.NumField(); i++ {
-
-		fv := ov.Field(i)
-		ft := ot.Field(i)
-
-		isTime := ft.Type.Name() == "Time" && ft.PkgPath == ""
-
-		if fv.Kind() == reflect.Struct && !isTime {
-			fields = append(fields, nestedFields(fv.Interface())...)
-		} else {
-			fields = append(fields, ft)
-		}
-	}
-
-	return fields
-}
-
-func composedOf(item interface{}, parent interface{}) bool {
-
-	it := reflect.TypeOf(item)
-	if it.Kind() == reflect.Ptr {
-		it = it.Elem()
-	}
-
-	pt := reflect.TypeOf(parent)
-	if pt.Kind() == reflect.Ptr {
-		pt = pt.Elem()
-	}
-	if pt.Kind() != reflect.Struct {
-		panic("parent must be struct type")
-	}
-
-	// find field with parent's exact name
-	f, ok := it.FieldByName(pt.Name())
-	if !ok {
-		return false
-	}
-
-	if !f.Anonymous {
-		return false
-	}
-
-	if !f.Type.ConvertibleTo(pt) {
-		return false
-	}
-
-	return true
 }
