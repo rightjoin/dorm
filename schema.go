@@ -10,11 +10,11 @@ import (
 	"github.com/rightjoin/utila/txt"
 )
 
-// DBConn can be used to override the default connection
+// OverrideDB can be used to override the default connection
 // that dorm uses for building schema and population.
 // It picks up database.master to do these operations, but
 // this can be overridden by DBConn variable
-var DBConn *gorm.DB
+var OverrideDB *gorm.DB
 
 // simple & static behaviours
 var behave = map[interface{}][]string{}
@@ -27,12 +27,16 @@ type triggered interface {
 	Triggers() []string
 }
 
+type populateRows interface {
+	InitialRecords() []interface{}
+}
+
 // db provides the gorm db connection on which
 // all operations of building schema and population
 // are performed
 func db() *gorm.DB {
-	if DBConn != nil {
-		return DBConn
+	if OverrideDB != nil {
+		return OverrideDB
 	}
 	return GetORM(true)
 }
@@ -83,45 +87,37 @@ func BuildSchema(models ...interface{}) {
 	for _, model := range models {
 		setupCustomTriggers(model)
 	}
+
+	// initial records defined in model
+	for _, model := range models {
+		insertInitialRecords(model)
+	}
 }
 
-func NewDB(name string) {
+func CreateDatabase(name string) {
 
-	// don't use master db connection, as it
+	// Don't use master db connection, as it
 	// will try to connect to a non-existing database.
-	schema := DBConn
-	if schema == nil {
-		engine := fig.String("database.master.engine")
-		conn := GetCstr(engine, "database.master")
+	// So replace db name with information_schema
+	engine := fig.String("database.master.engine")
+	conn := GetCstr(engine, "database.master")
+	currentDB := fig.String("database.master.db")
+	conn = strings.Replace(conn, currentDB, "information_schema", -1)
+	schema := GetORMCstr(engine, conn)
 
-		// replace db name with information_schema
-		conn = strings.Replace(conn, fig.String("database.master.db"), "information_schema", -1)
-		schema = GetORMCstr(engine, conn)
-	}
-
-	// save current db name
-	type Dbname struct {
-		Name string `json:"name"`
-	}
-	var cur Dbname
-	err := schema.Raw("SELECT DATABASE() AS name").Find(&cur).Error
+	// Create the new database
+	err := schema.Exec("CREATE DATABASE IF NOT EXISTS " + name + " CHARACTER SET utf8 COLLATE utf8_general_ci").Error
 	if err != nil {
 		panic(err)
 	}
 
-	// create new db
-	err = schema.Exec("CREATE DATABASE IF NOT EXISTS " + name + " CHARACTER SET utf8 COLLATE utf8_general_ci").Error
-	if err != nil {
-		panic(err)
-	}
-
-	// switch to new db
+	// Switch to new db (from information schema)
 	err = schema.Exec("USE " + name).Error
 	if err != nil {
 		panic(err)
 	}
 
-	// create the needed functions::
+	// Create the needed functions::
 
 	// function: url cleanup
 	err = schema.Exec(`CREATE FUNCTION geturl( str VARCHAR(256) ) RETURNS VARCHAR(256)
@@ -144,7 +140,7 @@ func NewDB(name string) {
 					IF prev = '-' AND c = '-' THEN
 						# do nothing
 						SET c = '-';
-					ELSE 
+					ELSE
 						SET ret=CONCAT(ret,c);
 					END IF;
 					SET prev = c;
@@ -176,14 +172,40 @@ func NewDB(name string) {
 		panic(err)
 	}
 
-	// switch back to original database for the connection
-	err = schema.Exec("USE " + cur.Name).Error
+	// Switch back underlying connection to
+	// information_schema (as the connection was opened to it only)
+	err = schema.Exec("USE information_schema").Error
 	if err != nil {
 		panic(err)
 	}
 }
 
-func Populate(records ...interface{}) {
+func DropDatabase(name string) {
+
+	dbo := db()
+	dbname := fig.String("database.master.db")
+	err := db().Exec("drop database " + dbname).Error
+	if err != nil {
+		panic(err)
+	}
+
+	// Now the connection points to database that
+	// has been deleted. so remove it from the list
+	// of connections
+	dbo.Close() // cleanup
+	var match string
+	for key, val := range connections {
+		if val.DB() == dbo.DB() {
+			match = key
+		}
+	}
+	if match != "" {
+		delete(connections, match)
+	}
+
+}
+
+func PopulateRows(records ...interface{}) {
 	for _, row := range records {
 		txn := db().Begin()
 
@@ -425,4 +447,11 @@ func setupHistoricAuditLog(model interface{}) {
         INSERT INTO <<Table>> SELECT null,'delete',NOW(), src.* 
         FROM <<TableOrig>> as src WHERE src.id = OLD.id;`)
 
+}
+
+func insertInitialRecords(model interface{}) {
+	if m, ok := model.(populateRows); ok {
+		recs := m.InitialRecords()
+		PopulateRows(recs...)
+	}
 }
