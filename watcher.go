@@ -51,7 +51,13 @@ func pushStateTableToReceivers() {
 	// then the lock is released
 
 	// loop
-	if !processExiting {
+	for {
+		if processExiting {
+			// clenaup state lock
 
+			// push to channel
+		} else {
+
+		}
 	}
 }
