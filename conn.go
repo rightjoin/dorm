@@ -98,15 +98,7 @@ func GetCstr(engine string, container ...string) string {
 
 	switch engine {
 	case "mysql":
-		type Mysql struct {
-			Host     string
-			Port     int
-			Db       string
-			Username string
-			Password string
-			Timezone string `conf:"optional"`
-		}
-		my := Mysql{}
+		my := MysqlConn{}
 		fig.Struct(&my, parent)
 		cstr := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?parseTime=true&loc=%s",
 			my.Username, my.Password,

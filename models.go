@@ -15,6 +15,10 @@ type UID10 struct {
 	UID string `sql:"TYPE:varchar(10);not null;DEFAULT:'';" json:"uid" unique:"true" insert:"no" update:"no"`
 }
 
+type UID8 struct {
+	UID string `sql:"TYPE:varchar(8);not null;DEFAULT:'';" json:"uid" unique:"true" insert:"no" update:"no"`
+}
+
 type Timed struct {
 	CreatedAt time.Time `sql:"TYPE:datetime;not null;DEFAULT:current_timestamp" json:"created_at" insert:"no" update:"no"`
 	UpdatedAt time.Time `sql:"TYPE:datetime;not null;DEFAULT:current_timestamp" json:"updated_at" insert:"no" update:"no" index:"true"`

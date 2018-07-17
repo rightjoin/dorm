@@ -17,10 +17,25 @@ type StateEvent struct {
 	NewState string `json:"new_state"`
 }
 
-func ReceiveStateEvents() {
+func WatchStateUpdate(code string, fn func(StateEvent) bool, models ...interface{}) {
+
+	// If state messages are not being read and pushed
+	// to bus, then enable it
+	broadcastStateEvents()
+
+}
+
+var broadcastState = false
+
+func broadcastStateEvents() {
+
+	// Run it only once in a process
+	if broadcastState {
+		return
+	}
 
 	// If state events are disabled, then halt/panic
-	if !fig.BoolOr(true, "watcher.state-event.active") {
+	if !fig.BoolOr(true, "dorm.state-event.active") {
 		return
 	}
 
@@ -29,6 +44,8 @@ func ReceiveStateEvents() {
 	go pushStateTableToReceivers()
 
 	// TODO: bypass generation of a unique code
+
+	broadcastState = true
 }
 
 // pushStateTableToReceivers function should be run once

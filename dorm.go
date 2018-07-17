@@ -36,6 +36,18 @@ func initStaticBehaviors() {
 		END IF;`,
 	}
 
+	// UID8
+	behave[UID8{}] = []string{
+		`CREATE TRIGGER <<Table>>_uid6_bfr_insert BEFORE INSERT ON <<Table>> FOR EACH ROW
+			IF NEW.uid IS NULL OR NEW.uid = '' THEN 
+				SET @id = 1;
+				WHILE (@id IS NOT NULL) DO
+					SET NEW.uid = randstr(8);
+					SET @id = (SELECT id FROM <<Table>> WHERE uid = NEW.uid);
+				END WHILE;
+			END IF;`,
+	}
+
 	// SoftDelete
 	behave[SoftDelete{}] = []string{
 		// do not allow delete action
