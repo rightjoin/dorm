@@ -1,7 +1,6 @@
 package dorm
 
 import (
-	"fmt"
 	"reflect"
 
 	"github.com/rightjoin/utila/txt"
@@ -24,24 +23,4 @@ func tableName(model interface{}) string {
 		return name[0].String()
 	}
 	return txt.CaseSnake(t.Name())
-}
-
-func signature(t reflect.Type) string {
-	sig := ""
-	if t.Kind() == reflect.Ptr {
-		sig = "*" + signature(t.Elem())
-	} else if t.Kind() == reflect.Map {
-		sig = "map"
-	} else if t.Kind() == reflect.Struct {
-		sig = fmt.Sprintf("st:%s.%s", t.PkgPath(), t.Name())
-	} else if t.Kind() == reflect.Interface {
-		sig = fmt.Sprintf("i:%s.%s", t.PkgPath(), t.Name())
-	} else if t.Kind() == reflect.Array {
-		sig = fmt.Sprintf("sl:%s.%s", t.Elem().PkgPath(), t.Elem().Name())
-	} else if t.Kind() == reflect.Slice {
-		sig = fmt.Sprintf("sl:%s.%s", t.Elem().PkgPath(), t.Elem().Name())
-	} else {
-		sig = t.Name()
-	}
-	return sig
 }

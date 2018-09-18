@@ -37,7 +37,7 @@ func validateModel(modl interface{}, data map[string]string, action string) (boo
 	for _, fld := range refl.NestedFields(obj) {
 		fname := fld.Name
 		sqlName := txt.CaseSnake(fname)
-		sig := signature(fld.Type)
+		sig := refl.Signature(fld.Type)
 		_, hasData := data[sqlName]
 
 		// fmt.Println("SQLName:", sqlName, "SIGNATURE:", sig, "FOUND:", hasData, "FLDTYPE:", fld.Type)
