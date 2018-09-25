@@ -19,7 +19,7 @@ import (
 )
 
 type File struct {
-	PK
+	PKey
 	UID10
 
 	Name   string `sql:"TYPE:varchar(128);not null;" json:"name" insert:"no" update:"no"`

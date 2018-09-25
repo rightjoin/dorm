@@ -1,7 +1,7 @@
 package dorm
 
 type Process struct {
-	PK
+	PKey
 
 	Name string `sql:"TYPE:varchar(96);not null;" json:"process" insert:"must" unique:"true"`
 

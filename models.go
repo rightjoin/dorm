@@ -7,7 +7,7 @@ import (
 	"github.com/rightjoin/utila/txt"
 )
 
-type PK struct {
+type PKey struct {
 	ID uint `sql:"auto_increment;not null;primary_key" json:"id" insert:"no" update:"no"`
 }
 
@@ -28,8 +28,7 @@ type Historic struct {
 }
 
 type WhosThat struct {
-	// Who values should never be passed in POST variables
-	Who *JDoc `sql:"TYPE:json" json:"-" insert:"no" update:"no"`
+	Who *JDoc `sql:"TYPE:json" json:"-"`
 }
 
 type Active1 struct {

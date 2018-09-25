@@ -17,7 +17,7 @@ type Stateful struct {
 // StateMachine is the database table that contains all the states
 // and transitions for a given entity that implements Stateful behavior
 type StateMachine struct {
-	PK
+	PKey
 
 	// Entity for which this state machine is being defined
 	Entity string `sql:"TYPE:varchar(96);not null" json:"entity" insert:"must" update:"no" unique:"true"`
@@ -151,7 +151,7 @@ func (j *Movements) Scan(value interface{}) error {
 // A separate process reads from this table, and dispatches the events
 // asynchronously to all the listeners (catchers)
 type StateQueue struct {
-	PK
+	PKey
 	Entity   string `sql:"TYPE:varchar(64);not null;" json:"entity" insert:"must" update:"no"`
 	EntityID uint   `sql:"not null;" json:"entity_id" insert:"must" update:"no"`
 	OldState string `sql:"TYPE:varchar(128);not null;DEFAULT:''" json:"old_state"`
