@@ -16,7 +16,7 @@ import (
 func InsertSelect(dbo *gorm.DB, addr interface{}, data ...interface{}) error {
 
 	// prepare data from user input
-	input := prepareData(data)
+	input := prepareData(data...)
 
 	// do validations of model fields
 	if ok, errs := validateModel(addr, input, "insert"); !ok {
@@ -43,7 +43,7 @@ func InsertSelect(dbo *gorm.DB, addr interface{}, data ...interface{}) error {
 func Insert(dbo *gorm.DB, addr interface{}, data ...interface{}) error {
 
 	// prepare data from user input
-	input := prepareData(data)
+	input := prepareData(data...)
 
 	// do validations of model fields
 	if ok, errs := validateModel(addr, input, "insert"); !ok {
@@ -70,13 +70,12 @@ func Insert(dbo *gorm.DB, addr interface{}, data ...interface{}) error {
 func UpdateSelect(dbo *gorm.DB, pkField string, pkValue interface{}, addr interface{}, data ...interface{}) error {
 
 	// prepare data from user input
-	input := prepareData(data)
+	input := prepareData(data...)
 
 	// do validations of model fields
 	if ok, errs := validateModel(addr, input, "update"); !ok {
 		return errs[0]
 	}
-
 	txn := dbo.Begin()
 	if txn.Error != nil {
 		// transaction must already be running,
@@ -97,7 +96,7 @@ func UpdateSelect(dbo *gorm.DB, pkField string, pkValue interface{}, addr interf
 func Update(dbo *gorm.DB, pkField string, pkValue interface{}, addr interface{}, data ...interface{}) error {
 
 	// prepare data from user input
-	input := prepareData(data)
+	input := prepareData(data...)
 
 	// do validations of model fields
 	if ok, errs := validateModel(addr, input, "update"); !ok {
@@ -142,6 +141,7 @@ func prepareData(data ...interface{}) map[string]string {
 		if temp, ok := data[0].(map[string]interface{}); ok {
 			inp = temp
 		}
+
 	} else {
 
 		// must be even number inputs
@@ -201,12 +201,12 @@ func doInsertion(txn *gorm.DB, addr interface{}, data map[string]string, doRead 
 		return err
 	}
 
-	// does model have OnSerialize validation
+	// does model have BeforeCommit validation
 	t := reflect.TypeOf(addr).Elem()
 	v := reflect.ValueOf(addr).Elem()
-	_, found := t.MethodByName("OnSerialize")
+	_, found := t.MethodByName("BeforeCommit")
 	if found {
-		doRead = true // force-read to perform OnSerialize validations
+		doRead = true // force-read to perform BeforeCommit validations
 	}
 
 	if doRead {
@@ -224,9 +224,9 @@ func doInsertion(txn *gorm.DB, addr interface{}, data map[string]string, doRead 
 			return err
 		}
 
-		// invoke OnSerialize validations
+		// invoke BeforeCommit validations
 		if found {
-			out := v.MethodByName("OnSerialize").Call([]reflect.Value{})
+			out := v.MethodByName("BeforeCommit").Call([]reflect.Value{})
 			if !out[0].IsNil() {
 				return out[0].Interface().(error)
 			}
@@ -255,12 +255,12 @@ func doUpdation(txn *gorm.DB, pkField string, pkValue interface{}, addr interfac
 		return err
 	}
 
-	// does model have OnSerialize validation
+	// does model have BeforeCommit validation
 	t := reflect.TypeOf(addr).Elem()
 	v := reflect.ValueOf(addr).Elem()
-	_, found := t.MethodByName("OnSerialize")
+	_, found := t.MethodByName("BeforeCommit")
 	if found {
-		doRead = true // force-read to perform OnSerialize validations
+		doRead = true // force-read to perform BeforeCommit validations
 	}
 
 	if doRead {
@@ -270,9 +270,9 @@ func doUpdation(txn *gorm.DB, pkField string, pkValue interface{}, addr interfac
 			return err
 		}
 
-		// invoke OnSerialize validations
+		// invoke BeforeCommit validations
 		if found {
-			out := v.MethodByName("OnSerialize").Call([]reflect.Value{})
+			out := v.MethodByName("BeforeCommit").Call([]reflect.Value{})
 			if !out[0].IsNil() {
 				return out[0].Interface().(error)
 			}
