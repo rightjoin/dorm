@@ -6,8 +6,8 @@ import (
 
 	"github.com/jinzhu/gorm"
 	"github.com/rightjoin/fig"
+	"github.com/rightjoin/utila/conv"
 	"github.com/rightjoin/utila/refl"
-	"github.com/rightjoin/utila/txt"
 )
 
 // OverrideDB can be used to override the default connection
@@ -231,11 +231,11 @@ func setupUniqueIndexes(model interface{}) {
 		if len(fld.Tag.Get("unique")) > 0 {
 			name := fld.Tag.Get("unique")
 			if name == "true" { // generate index name
-				name = "idx_" + txt.CaseSnake(fld.Name) + "_unique"
+				name = "idx_" + conv.CaseSnake(fld.Name) + "_unique"
 			}
 			lbrace := strings.Index(name, "(")
 			if lbrace == -1 {
-				err := db().Model(model).AddUniqueIndex(name, txt.CaseSnake(fld.Name)).Error
+				err := db().Model(model).AddUniqueIndex(name, conv.CaseSnake(fld.Name)).Error
 				if err != nil {
 					panic(err)
 				}
@@ -267,11 +267,11 @@ func setupIndexes(model interface{}) {
 		if len(fld.Tag.Get("index")) > 0 {
 			name := fld.Tag.Get("index")
 			if name == "true" { // generate index name
-				name = "idx_" + txt.CaseSnake(fld.Name)
+				name = "idx_" + conv.CaseSnake(fld.Name)
 			}
 			lbrace := strings.Index(name, "(")
 			if lbrace == -1 {
-				err := db().Model(model).AddIndex(name, txt.CaseSnake(fld.Name)).Error
+				err := db().Model(model).AddIndex(name, conv.CaseSnake(fld.Name)).Error
 				if err != nil {
 					panic(err)
 				}
@@ -301,7 +301,7 @@ func setupForeignKeys(model interface{}) {
 		fld := modelType.FieldByIndex([]int{i})
 		tag := fld.Tag
 		if len(tag.Get("fk")) > 0 {
-			fk := txt.CaseSnake(fld.Name)
+			fk := conv.CaseSnake(fld.Name)
 			err := db().Model(model).AddForeignKey(fk, tag.Get("fk"), "RESTRICT", "RESTRICT").Error
 			if err != nil {
 				panic(err)

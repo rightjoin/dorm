@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/asaskevich/govalidator"
+	"github.com/rightjoin/utila/conv"
 	"github.com/rightjoin/utila/refl"
-	"github.com/rightjoin/utila/txt"
 )
 
 func validateModel(modl interface{}, data map[string]string, action string) (bool, []error) {
@@ -36,7 +36,7 @@ func validateModel(modl interface{}, data map[string]string, action string) (boo
 
 	for _, fld := range refl.NestedFields(obj) {
 		fname := fld.Name
-		sqlName := txt.CaseSnake(fname)
+		sqlName := conv.CaseSnake(fname)
 		sig := refl.Signature(fld.Type)
 		_, hasData := data[sqlName]
 

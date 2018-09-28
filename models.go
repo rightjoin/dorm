@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/rightjoin/utila/txt"
+	"github.com/rightjoin/utila/conv"
 )
 
 type PKey struct {
@@ -97,5 +97,5 @@ func (s Seo) UrlPrefix(addr interface{}) string {
 		prefix = pre
 	}
 
-	return txt.CaseURL(prefix)
+	return conv.CaseURL(prefix)
 }

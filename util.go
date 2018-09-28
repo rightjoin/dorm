@@ -3,7 +3,7 @@ package dorm
 import (
 	"reflect"
 
-	"github.com/rightjoin/utila/txt"
+	"github.com/rightjoin/utila/conv"
 )
 
 const (
@@ -22,5 +22,5 @@ func tableName(model interface{}) string {
 		name := v.MethodByName("TableName").Call([]reflect.Value{})
 		return name[0].String()
 	}
-	return txt.CaseSnake(t.Name())
+	return conv.CaseSnake(t.Name())
 }
