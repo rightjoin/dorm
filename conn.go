@@ -59,7 +59,7 @@ func GetORMConfig(container ...string) *gorm.DB {
 	fig.MustExist(parent)
 
 	engine := fig.String(parent, "engine")
-	cstr := GetCstr(engine, parent)
+	cstr := GetCstrConfig(engine, parent)
 	return GetORMCstr(engine, cstr)
 }
 
@@ -93,21 +93,43 @@ func GetORMCstr(engine string, conn string) *gorm.DB {
 	panic(e)
 }
 
-func GetCstr(engine string, container ...string) string {
+// GetCstrConfig reads the configuratin and returns the Cstr
+func GetCstrConfig(engine string, container ...string) string {
 	parent := strings.Join(container, ".")
 
 	switch engine {
 	case "mysql":
 		my := MysqlConn{}
 		fig.Struct(&my, parent)
-		cstr := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?parseTime=true&loc=%s",
-			my.Username, my.Password,
-			my.Host, my.Port, my.Db,
-			url.QueryEscape(my.Timezone),
-		)
-		return cstr
+		return GetCstr(engine, map[string]interface{}{
+			"username": my.Username,
+			"password": my.Password,
+			"host":     my.Host,
+			"port":     my.Port,
+			"db":       my.Db,
+			"timezone": my.Timezone,
+		})
 
 	default:
 		panic("unsupported db engine:" + engine)
 	}
+}
+
+func GetCstr(engine string, prop map[string]interface{}) (cstr string) {
+
+	switch engine {
+	case "mysql":
+		if timezone, ok := prop["timezone"]; !ok || timezone == "" {
+			prop["timezone"] = "UTC"
+		}
+		cstr = fmt.Sprintf("%s:%s@tcp(%s:%v)/%s?parseTime=true&loc=%s",
+			prop["username"], prop["password"],
+			prop["host"], prop["port"], prop["db"],
+			url.QueryEscape(prop["timezone"].(string)),
+		)
+	default:
+		panic("blah blah!")
+	}
+
+	return
 }

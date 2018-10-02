@@ -100,7 +100,7 @@ func CreateDatabase(name string) {
 	// will try to connect to a non-existing database.
 	// So replace db name with information_schema
 	engine := fig.String("database.master.engine")
-	conn := GetCstr(engine, "database.master")
+	conn := GetCstrConfig(engine, "database.master")
 	currentDB := fig.String("database.master.db")
 	conn = strings.Replace(conn, currentDB, "information_schema", -1)
 	schema := GetORMCstr(engine, conn)
