@@ -105,11 +105,13 @@ func Update(dbo *gorm.DB, pkField string, pkValue interface{}, addr interface{},
 
 	txn := dbo.Begin()
 	if txn.Error != nil {
+		fmt.Println("y1")
 		// transaction must already be running,
 		// so we just send the update to db
 		return doUpdation(dbo, pkField, pkValue, addr, input, false)
 	}
 
+	fmt.Println("y2")
 	// execute updation
 	err := doUpdation(dbo, pkField, pkValue, addr, input, false)
 	if err != nil {
@@ -168,7 +170,9 @@ func prepareData(data ...interface{}) map[string]string {
 		case float32, float64:
 			mStr[k] = fmt.Sprintf("%f", val)
 		case time.Time:
-			mStr[k] = val.Format("2006-01-02T15:04:05.999999-07:00")
+			mStr[k] = val.Format("2006-01-02T15:04:05.999999 -0700")
+			//mStr[k] = val.Format(time.RFC3339)
+			fmt.Println("using time formatty")
 		case bool:
 			if val {
 				mStr[k] = "1"
@@ -250,6 +254,7 @@ func doUpdation(txn *gorm.DB, pkField string, pkValue interface{}, addr interfac
 
 	// send update to db
 	sql, params := buildUpdateSql(table, pkField, pkValue, data)
+	fmt.Println("sql:", sql)
 	err := txn.Exec(sql, params...).Error
 	if err != nil {
 		return err
