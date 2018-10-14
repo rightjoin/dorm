@@ -172,7 +172,6 @@ func prepareData(data ...interface{}) map[string]string {
 		case time.Time:
 			mStr[k] = val.Format("2006-01-02T15:04:05.999999 -0700")
 			//mStr[k] = val.Format(time.RFC3339)
-			fmt.Println("using time formatty")
 		case bool:
 			if val {
 				mStr[k] = "1"
