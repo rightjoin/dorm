@@ -105,13 +105,11 @@ func Update(dbo *gorm.DB, pkField string, pkValue interface{}, addr interface{},
 
 	txn := dbo.Begin()
 	if txn.Error != nil {
-		fmt.Println("y1")
 		// transaction must already be running,
 		// so we just send the update to db
 		return doUpdation(dbo, pkField, pkValue, addr, input, false)
 	}
 
-	fmt.Println("y2")
 	// execute updation
 	err := doUpdation(dbo, pkField, pkValue, addr, input, false)
 	if err != nil {
