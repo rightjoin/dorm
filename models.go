@@ -47,6 +47,10 @@ type Ordered struct {
 	Sequence uint `sql:"not null;DEFAULT:'1'" json:"sequence"`
 }
 
+type Boosted struct {
+	Boost int8 `sql:"not null;DEFAULT:'0'" json:"boost"`
+}
+
 type SoftDelete struct {
 	Deleted   uint8      `sql:"TYPE:tinyint(1) unsigned;not null;DEFAULT:'0'" json:"deleted" insert:"no" index:"true"`
 	DeletedAt *time.Time `sql:"TYPE:datetime;null;" json:"deleted_at" insert:"no" update:"no"`
