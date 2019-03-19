@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/jinzhu/gorm"
-	"github.com/rightjoin/utila/refl"
+	"github.com/rightjoin/rutl/refl"
 )
 
 // MySQL doesn't support nested transactions. So the code tries to start

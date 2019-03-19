@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/asaskevich/govalidator"
-	"github.com/rightjoin/utila/conv"
-	"github.com/rightjoin/utila/refl"
+	"github.com/rightjoin/rutl/conv"
+	"github.com/rightjoin/rutl/refl"
 )
 
 func validateModel(modl interface{}, data map[string]string, action string) (bool, []error) {

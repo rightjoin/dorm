@@ -3,7 +3,7 @@ package dorm
 import (
 	"reflect"
 
-	"github.com/rightjoin/utila/conv"
+	"github.com/rightjoin/rutl/conv"
 )
 
 const (

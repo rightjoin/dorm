@@ -6,8 +6,8 @@ import (
 
 	"github.com/jinzhu/gorm"
 	"github.com/rightjoin/fig"
-	"github.com/rightjoin/utila/conv"
-	"github.com/rightjoin/utila/refl"
+	"github.com/rightjoin/rutl/conv"
+	"github.com/rightjoin/rutl/refl"
 )
 
 // OverrideDB can be used to override the default connection
