@@ -36,7 +36,6 @@ type File struct {
 	// Behaviors
 	Active1
 	SoftDelete
-	Historic
 	WhosThat
 	Timed
 }
