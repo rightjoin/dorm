@@ -102,7 +102,9 @@ func CreateDatabase(name string) {
 	engine := fig.String("database.master.engine")
 	conn := GetCstrConfig(engine, "database.master")
 	currentDB := fig.String("database.master.db")
-	conn = strings.Replace(conn, currentDB, "information_schema", -1)
+	// Replace last occurance of dbname (as others may be there as part of hostname)
+	index := strings.LastIndex(conn, currentDB)
+	conn = conn[:index] + strings.Replace(conn[index:], currentDB, "information_schema", -1)
 	schema := GetORMCstr(engine, conn)
 
 	// Create the new database
