@@ -15,6 +15,10 @@ import (
 
 var imgSign = "*st:github.com/rightjoin/dorm.Img"
 
+// ImgFileRef global variable controls which of the two references
+// (UID or ID) of File is stored for lookups inside Img struct.
+var ImgFileRef string = "UID" // Possible value sare UID or ID
+
 type Img struct {
 	FileRef string `json:"file_ref"`
 	Src     string `json:"src"`
@@ -99,7 +103,11 @@ func SaveAnyImg(req *http.Request, post map[string]string, model interface{}) er
 
 		// Update posted variable
 		if file != nil {
-			post[sql] = fmt.Sprintf(`{"file_ref":%s, "src":"%s"}`, file.UID, file.URL())
+			var ref = file.UID
+			if ImgFileRef == "ID" {
+				ref = fmt.Sprintf("%d", file.ID)
+			}
+			post[sql] = fmt.Sprintf(`{"file_ref":%s, "src":"%s"}`, ref, file.URL())
 		}
 	}
 
