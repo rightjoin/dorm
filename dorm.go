@@ -3,19 +3,11 @@ package dorm
 import (
 	"fmt"
 	"strings"
-
-	uuid "github.com/satori/go.uuid"
 )
 
 const historyPrefix = "zoom_"
 
-// ProcessUUID is the uniq id given to the dorm process
-var ProcessUUID = ""
-
 func init() {
-
-	// give this process a unique UUID
-	ProcessUUID = uuid.NewV4().String()
 
 	// initialize behaviours
 	initStaticBehaviors()
