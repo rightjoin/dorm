@@ -186,7 +186,7 @@ func prepareData(data ...interface{}) map[string]string {
 func doInsertion(txn *gorm.DB, addr interface{}, data map[string]string, doRead bool) error {
 
 	// get table name
-	table := tableName(addr)
+	table := Table(addr)
 
 	// ensure that "who" values have been attached from request
 	if refl.ComposedOf(addr, WhosThat{}) {
@@ -240,7 +240,7 @@ func doInsertion(txn *gorm.DB, addr interface{}, data map[string]string, doRead 
 func doUpdation(txn *gorm.DB, pkField string, pkValue interface{}, addr interface{}, data map[string]string, doRead bool) error {
 
 	// get table name
-	table := tableName(addr)
+	table := Table(addr)
 
 	// ensure that "who" values have been attached from request
 	if refl.ComposedOf(addr, WhosThat{}) {

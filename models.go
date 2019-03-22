@@ -96,7 +96,7 @@ func (s Seo) UrlPrefix(addr interface{}) string {
 		panic("Seo field not found in model")
 	}
 
-	prefix := tableName(addr)
+	prefix := Table(addr)
 	if pre, ok := sf.Tag.Lookup("url_prefix"); ok {
 		prefix = pre
 	}

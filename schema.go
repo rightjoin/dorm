@@ -329,7 +329,7 @@ func setupCustomTriggers(model interface{}) {
 
 func setupBehaviors(model interface{}) {
 
-	tbl := tableName(model)
+	tbl := Table(model)
 
 	// skip behaviours for "zoom_" tables
 	if strings.HasPrefix(tbl, "zoom_") {
@@ -367,7 +367,7 @@ func setupBehaviors(model interface{}) {
 
 func setupHistoricAuditLog(model interface{}) {
 
-	tbl := tableName(model)
+	tbl := Table(model)
 	hist := historyPrefix + tbl
 
 	exec := func(inp string) {

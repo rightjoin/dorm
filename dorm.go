@@ -207,7 +207,7 @@ func initDynamicBehaviors() {
 			Extra   string  `gorm:"column:Extra"`
 		}
 		var f Field
-		err := db().Raw("show columns from " + tableName(model) + " where Field = 'updated_at'").Find(&f).Error
+		err := db().Raw("show columns from " + Table(model) + " where Field = 'updated_at'").Find(&f).Error
 		if err != nil {
 			panic(err)
 		}

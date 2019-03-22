@@ -10,7 +10,9 @@ const (
 	NullString = "^NULL^"
 )
 
-func tableName(model interface{}) string {
+// Table returns the table name of the underlying
+// model
+func Table(model interface{}) string {
 	t := reflect.TypeOf(model)
 	v := reflect.ValueOf(model)
 	if t.Kind() == reflect.Ptr {
