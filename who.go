@@ -1,12 +1,12 @@
 package dorm
 
 import (
+	"encoding/json"
 	"net/http"
 	"os"
 	"strings"
 
-	"bitbucket.org/rightjoin/ion/dat"
-	"bitbucket.org/rightjoin/ion/ip"
+	"github.com/rightjoin/rutl/ip"
 )
 
 func WhoStr(r *http.Request) string {
@@ -14,7 +14,7 @@ func WhoStr(r *http.Request) string {
 	who := WhoMap(r)
 
 	// serialize who
-	b, err := dat.ToBytes(who)
+	b, err := json.Marshal(who)
 	if err != nil {
 		panic(err)
 	}
@@ -70,7 +70,7 @@ func WhoProc(script string) string {
 	}
 
 	// serialize who
-	b, err := dat.ToBytes(m)
+	b, err := json.Marshal(m)
 	if err != nil {
 		panic(err)
 	}
