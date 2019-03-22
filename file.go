@@ -44,21 +44,21 @@ func NewFile(f multipart.File, fh *multipart.FileHeader, entity, field string, w
 
 	var fi File
 
-	// close f (multipart file) eventually
+	// Close f (multipart file) eventually
 	defer f.Close()
 
-	// file size
+	// File size
 	var buf bytes.Buffer
 	fsize, err := buf.ReadFrom(f)
 	fi.Size = uint(fsize)
 
-	// file type
+	// File type
 	fi.Mime = http.DetectContentType(buf.Bytes())
 
-	// file extension
+	// File extension
 	fi.Extn = filepath.Ext(fh.Filename)[1:]
 
-	// dimenstions (if it is an image)
+	// Dimensions (if it is an image)
 	if strings.HasPrefix(fi.Mime, "image/") {
 		img, _, err := image.DecodeConfig(bytes.NewReader(buf.Bytes()))
 		if err == nil {
@@ -67,7 +67,7 @@ func NewFile(f multipart.File, fh *multipart.FileHeader, entity, field string, w
 		}
 	}
 
-	// filename:
+	// Filename:
 	// remove spaces and better yet, all non-alphanumeric
 	// characters from the filename. keeps it simple and avoids
 	// some errors
@@ -79,20 +79,20 @@ func NewFile(f multipart.File, fh *multipart.FileHeader, entity, field string, w
 	fi.Field = field
 	fi.Who = NewJDoc2(who)
 
-	// validation for size & dimensions
+	// Validation for size & dimensions
 	if err := fi.ValidateSize(); err != nil {
 		return nil, err
 	}
 
-	// save to db
+	// Save to db (first)
 	dbo := GetORM(true)
-	err = dbo.Create(fi).Error
+	err = dbo.Create(&fi).Error
 	if err != nil {
 		return nil, err
 	}
 	dbo.Where("id=?", fi.ID).Find(&fi)
 
-	// save to disk
+	// Save bytes to disk (second)
 	err = fi.DiskWrite(buf.Bytes())
 	if err != nil {
 		return nil, err
@@ -172,7 +172,7 @@ func (f File) ValidateSize() error {
 func (f File) DiskWrite(raw []byte) error {
 
 	// path at which the files are found
-	directory := fig.String("file.folder")
+	directory := fig.StringOr("./files", "file.folder")
 	if !strings.HasSuffix(directory, "/") {
 		directory += "/"
 	}
