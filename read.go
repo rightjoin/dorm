@@ -7,7 +7,7 @@ import (
 
 	"github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
-	log "github.com/rightjoin/log15"
+	log "github.com/rightjoin/rlog"
 )
 
 func ToMap(dbo *gorm.DB, sql string, params ...interface{}) ([]map[string]interface{}, error) {

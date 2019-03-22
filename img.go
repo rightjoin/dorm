@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
-	log "github.com/rightjoin/log15"
+	log "github.com/rightjoin/rlog"
 	"github.com/rightjoin/rutl/conv"
 
 	"github.com/rightjoin/rutl/refl"
@@ -107,7 +107,7 @@ func SaveAnyImg(req *http.Request, post map[string]string, model interface{}) er
 			if ImgFileRef == "ID" {
 				ref = fmt.Sprintf("%d", file.ID)
 			}
-			post[sql] = fmt.Sprintf(`{"file_ref":%s, "src":"%s"}`, ref, file.URL())
+			post[sql] = fmt.Sprintf(`{"file_ref":"%s", "src":"%s"}`, ref, file.URL())
 		}
 	}
 
