@@ -202,12 +202,11 @@ func doInsertion(txn *gorm.DB, addr interface{}, data map[string]string, doRead 
 		return err
 	}
 
-	// does model have BeforeCommit validation
-	t := reflect.TypeOf(addr).Elem()
+	// does model have PreCommit validation
 	v := reflect.ValueOf(addr).Elem()
-	_, found := t.MethodByName("BeforeCommit")
+	_, found := v.Interface().(hookCommit)
 	if found {
-		doRead = true // force-read to perform BeforeCommit validations
+		doRead = true // force-read to perform PreCommit validations
 	}
 
 	if doRead {
@@ -225,9 +224,9 @@ func doInsertion(txn *gorm.DB, addr interface{}, data map[string]string, doRead 
 			return err
 		}
 
-		// invoke BeforeCommit validations
+		// invoke PreCommit validations
 		if found {
-			out := v.MethodByName("BeforeCommit").Call([]reflect.Value{})
+			out := v.MethodByName("PreCommit").Call([]reflect.Value{})
 			if !out[0].IsNil() {
 				return out[0].Interface().(error)
 			}
@@ -257,12 +256,11 @@ func doUpdation(txn *gorm.DB, pkField string, pkValue interface{}, addr interfac
 		return err
 	}
 
-	// does model have BeforeCommit validation
-	t := reflect.TypeOf(addr).Elem()
+	// does model have PreCommit validation
 	v := reflect.ValueOf(addr).Elem()
-	_, found := t.MethodByName("BeforeCommit")
+	_, found := v.Interface().(hookCommit)
 	if found {
-		doRead = true // force-read to perform BeforeCommit validations
+		doRead = true // force-read to perform PreCommit validations
 	}
 
 	if doRead {
@@ -272,9 +270,9 @@ func doUpdation(txn *gorm.DB, pkField string, pkValue interface{}, addr interfac
 			return err
 		}
 
-		// invoke BeforeCommit validations
+		// invoke PreCommit validations
 		if found {
-			out := v.MethodByName("BeforeCommit").Call([]reflect.Value{})
+			out := v.MethodByName("PreCommit").Call([]reflect.Value{})
 			if !out[0].IsNil() {
 				return out[0].Interface().(error)
 			}
@@ -350,3 +348,7 @@ func buildUpdateSql(tbl string, pkField string, pkValue interface{}, inp map[str
 }
 
 var EncryptColumn func(tbl string, field string, value string) (encrpValue string)
+
+type hookCommit interface {
+	PreCommit() error
+}
