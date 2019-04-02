@@ -24,55 +24,7 @@ type File struct {
 	Src string `json:"src"`
 }
 
-type ImageFiles struct {
-	Images *FileList `sql:"TYPE:json" json:"images"`
-}
-
-type FileList []File
-
-func (p *File) Value() (driver.Value, error) {
-	if p == nil {
-		return nil, nil
-	}
-	str, err := json.Marshal(p)
-	return string(str), err
-}
-
-func (p *File) Scan(value interface{}) error {
-	if value == nil {
-		p = nil
-	}
-	bytes, ok := value.([]byte)
-	if !ok {
-		return errors.New("Scan source was not []bytes")
-	}
-	if err := json.Unmarshal(bytes, &p); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (p *FileList) Value() (driver.Value, error) {
-	if p == nil {
-		return nil, nil
-	}
-	str, err := json.Marshal(p)
-	return string(str), err
-}
-
-func (p *FileList) Scan(value interface{}) error {
-	if value == nil {
-		p = nil
-	}
-	bytes, ok := value.([]byte)
-	if !ok {
-		return errors.New("Scan source was not []bytes")
-	}
-	if err := json.Unmarshal(bytes, &p); err != nil {
-		return err
-	}
-	return nil
-}
+type Files []File
 
 // SaveAnyFile first traverses all the fields of a given model. If it
 // finds any dorm.Img field, then it tries to see if a file is part of
@@ -112,5 +64,49 @@ func SaveAnyFile(req *http.Request, post map[string]string, model interface{}) e
 		}
 	}
 
+	return nil
+}
+
+func (p *File) Value() (driver.Value, error) {
+	if p == nil {
+		return nil, nil
+	}
+	str, err := json.Marshal(p)
+	return string(str), err
+}
+
+func (p *File) Scan(value interface{}) error {
+	if value == nil {
+		p = nil
+	}
+	bytes, ok := value.([]byte)
+	if !ok {
+		return errors.New("Scan source was not []bytes")
+	}
+	if err := json.Unmarshal(bytes, &p); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (p *Files) Value() (driver.Value, error) {
+	if p == nil {
+		return nil, nil
+	}
+	str, err := json.Marshal(p)
+	return string(str), err
+}
+
+func (p *Files) Scan(value interface{}) error {
+	if value == nil {
+		p = nil
+	}
+	bytes, ok := value.([]byte)
+	if !ok {
+		return errors.New("Scan source was not []bytes")
+	}
+	if err := json.Unmarshal(bytes, &p); err != nil {
+		return err
+	}
 	return nil
 }
