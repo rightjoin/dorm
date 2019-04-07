@@ -1,8 +1,10 @@
 package dorm
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
+	"strconv"
 	"time"
 
 	"github.com/jinzhu/gorm"
@@ -123,8 +125,9 @@ func Update(dbo *gorm.DB, pkField string, pkValue interface{}, addr interface{},
 // prepareData takes a set of inputs and converts it into a map[string]string.
 // If there is only one input and it happens to be a map[string]string it
 // is used as return value. If this input happens to be a map[string]interface{}
-// then it gets converted into map[string]string. If neither then the input
-// is treated as a series of key-value pairs.
+// then it gets converted into map[string]string. If it happens to be a struct
+// then it is converted to map[string]interface, and finally to map[string]string
+// If neither then the input is treated as a series of key-value pairs.
 func prepareData(data ...interface{}) map[string]string {
 
 	var inp map[string]interface{}
@@ -140,6 +143,17 @@ func prepareData(data ...interface{}) map[string]string {
 		// if it is a map of string -> interface then we will process it further
 		if temp, ok := data[0].(map[string]interface{}); ok {
 			inp = temp
+		} else if reflect.TypeOf(data[0]).Kind() == reflect.Struct {
+			b, err := json.Marshal(data[0])
+			if err != nil {
+				panic("can not convert struct to map")
+			}
+			err = json.Unmarshal(b, &inp)
+			if err != nil {
+				panic("can not retrieve map from struct")
+			}
+		} else {
+			panic("unhandled type (" + reflect.TypeOf(data[0]).Name() + ") passed to prepareData")
 		}
 
 	} else {
@@ -165,8 +179,10 @@ func prepareData(data ...interface{}) map[string]string {
 			mStr[k] = fmt.Sprintf("%d", val)
 		case string:
 			mStr[k] = val
-		case float32, float64:
-			mStr[k] = fmt.Sprintf("%f", val)
+		case float32:
+			mStr[k] = strconv.FormatFloat(float64(val), 'f', -1, 64)
+		case float64:
+			mStr[k] = strconv.FormatFloat(val, 'f', -1, 64)
 		case time.Time:
 			mStr[k] = val.Format("2006-01-02T15:04:05.999999 -0700")
 			//mStr[k] = val.Format(time.RFC3339)

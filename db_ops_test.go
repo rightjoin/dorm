@@ -33,4 +33,14 @@ func TestPrepareData(t *testing.T) {
 	assert.Equal(t, map[string]string{"a": "A", "b": "B"}, prepareData(map[string]string{"a": "A", "b": "B"}))
 	assert.Equal(t, map[string]string{"a": "A", "n": "12345"}, prepareData(map[string]interface{}{"a": "A", "n": 12345}))
 	assert.Equal(t, map[string]string{"a": "A", "n": "12345", "f": "12.345678"}, prepareData("a", "A", "n", 12345, "f", 12.345678))
+
+	type SomeStruct struct {
+		A string  `json:"a"`
+		N int     `json:"n"`
+		F float32 `json:"f"`
+	}
+	assert.Equal(t, map[string]string{"a": "A", "n": "12345", "f": "123.456"}, prepareData(SomeStruct{A: "A",
+		N: 12345,
+		F: 123.456,
+	}))
 }
