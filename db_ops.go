@@ -245,7 +245,8 @@ func doInsertion(txn *gorm.DB, addr interface{}, data map[string]string, doRead 
 		}
 
 		// select record
-		err = txn.Where("id=?", pid).Find(addr).Error
+		//err = txn.Where("id=?", pid).Find(addr).Error
+		err = txn.Raw("SELECT * FROM "+Table(addr)+" WHERE id=?", pid).Scan(addr).Error
 		if err != nil {
 			return err
 		}
