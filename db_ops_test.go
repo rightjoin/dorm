@@ -30,10 +30,16 @@ func TestBuildUpdateSql(t *testing.T) {
 }
 
 func TestPrepareData(t *testing.T) {
+	// map[string]string
 	assert.Equal(t, map[string]string{"a": "A", "b": "B"}, prepareData(map[string]string{"a": "A", "b": "B"}))
-	assert.Equal(t, map[string]string{"a": "A", "n": "12345"}, prepareData(map[string]interface{}{"a": "A", "n": 12345}))
-	assert.Equal(t, map[string]string{"a": "A", "n": "12345", "f": "12.345678"}, prepareData("a", "A", "n", 12345, "f", 12.345678))
 
+	// map[string]interface
+	assert.Equal(t, map[string]string{"a": "A", "n": "12345"}, prepareData(map[string]interface{}{"a": "A", "n": 12345}))
+
+	// map[string]interface containing nested json array
+	assert.Equal(t, map[string]string{"json": `["a","b"]`}, prepareData(map[string]interface{}{"json": []string{"a", "b"}}))
+
+	// Struct
 	type SomeStruct struct {
 		A string  `json:"a"`
 		N int     `json:"n"`
@@ -43,4 +49,8 @@ func TestPrepareData(t *testing.T) {
 		N: 12345,
 		F: 123.456,
 	}))
+
+	// key-value
+	assert.Equal(t, map[string]string{"a": "A", "n": "12345", "f": "12.345678"}, prepareData("a", "A", "n", 12345, "f", 12.345678))
+
 }

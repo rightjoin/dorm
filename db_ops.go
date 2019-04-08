@@ -192,7 +192,17 @@ func prepareData(data ...interface{}) map[string]string {
 			}
 			mStr[k] = "0"
 		default:
-			mStr[k] = fmt.Sprint(v)
+			// If it is a slice, then try to encode it in a string
+			kind := reflect.TypeOf(v).Kind()
+			if kind == reflect.Slice || kind == reflect.Array {
+				b, err := json.Marshal(v)
+				if err != nil {
+					panic("could not convert array/slice to json format")
+				}
+				mStr[k] = string(b)
+			} else {
+				mStr[k] = fmt.Sprint(v)
+			}
 		}
 	}
 
