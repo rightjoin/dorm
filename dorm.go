@@ -170,16 +170,16 @@ func initStaticBehaviors() {
 		`CREATE TRIGGER <<Table>>_stateful_aft_insert AFTER INSERT ON <<Table>> FOR EACH ROW
 		BEGIN	
 			IF NOT NEW.machine_state IS NULL THEN
-				INSERT INTO state_machine_queue (entity,entity_id,created_at,updated_at,old_state,new_state) VALUES ('<<Table>>',NEW.ID,NEW.created_at,NEW.updated_at,'',NEW.machine_state);
+				INSERT INTO state_queue (entity,entity_id,created_at,updated_at,old_state,new_state) VALUES ('<<Table>>',NEW.ID,NEW.created_at,NEW.updated_at,'',NEW.machine_state);
 			END IF;
 		END`,
 		// push updates of state machine to state-queue
 		`CREATE TRIGGER <<Table>>_stateful_aft_update AFTER UPDATE ON <<Table>> FOR EACH ROW
 		BEGIN	
 			IF OLD.machine_state IS NULL AND NOT NEW.machine_state IS NULL THEN
-				INSERT INTO state_machine_queue (entity,entity_id,created_at,updated_at,old_state,new_state) VALUES ('<<Table>>',NEW.ID,NEW.created_at,NEW.updated_at,'',NEW.machine_state);
+				INSERT INTO state_queue (entity,entity_id,created_at,updated_at,old_state,new_state) VALUES ('<<Table>>',NEW.ID,NEW.created_at,NEW.updated_at,'',NEW.machine_state);
 			ELSEIF NOT OLD.machine_state IS NULL AND NOT NEW.machine_state IS NULL AND OLD.machine_state <> NEW.machine_state THEN
-				INSERT INTO state_machine_queue (entity,entity_id,created_at,updated_at,old_state,new_state) VALUES ('<<Table>>',NEW.ID,NEW.created_at,NEW.updated_at,OLD.machine_state,NEW.machine_state);
+				INSERT INTO state_queue (entity,entity_id,created_at,updated_at,old_state,new_state) VALUES ('<<Table>>',NEW.ID,NEW.created_at,NEW.updated_at,OLD.machine_state,NEW.machine_state);
 			END IF;
         END`,
 	}
