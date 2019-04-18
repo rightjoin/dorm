@@ -20,7 +20,7 @@ type Attribute struct {
 	Units     *JArrStr `sql:"TYPE:json;" json:"units"`
 }
 
-func (a Attribute) accetps(inp string) (interface{}, error) {
+func (a Attribute) Accepts(inp string) (interface{}, error) {
 
 	// Check if it can be parsed, and
 	// obtain its value
