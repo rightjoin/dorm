@@ -32,12 +32,14 @@ func (a AttributeEntity) Triggers() []string {
 	return []string{
 		`CREATE TRIGGER attribute_entity_bfr_insert BEFORE INSERT ON attribute_entity FOR EACH ROW
         BEGIN
-            SET NEW.code = REPLACE(LCASE(TRIM(NEW.code)),' ','-');
+			SET NEW.code = REPLACE(LCASE(TRIM(NEW.code)),' ','-'); #no spaces, lowercase
+			SET NEW.code = REPLACE(NEW.code,'.',''); #no dots
         END`,
 		`CREATE TRIGGER attribute_entity_bfr_update BEFORE UPDATE ON attribute_entity FOR EACH ROW
         BEGIN
-            SET NEW.code = REPLACE(LCASE(TRIM(NEW.code)),' ','-');
-        END`,
+			SET NEW.code = REPLACE(LCASE(TRIM(NEW.code)),' ','-'); #no spaces, lowercase
+			SET NEW.code = REPLACE(NEW.code,'.',''); #no dots
+		END`,
 	}
 }
 
