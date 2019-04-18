@@ -40,7 +40,7 @@ type Active0 struct {
 }
 
 type Tagged struct {
-	Tags *JArr `sql:"TYPE:json;" json:"tags"`
+	Tags *JArrStr `sql:"TYPE:json;" json:"tags"`
 }
 
 type Ordered struct {
