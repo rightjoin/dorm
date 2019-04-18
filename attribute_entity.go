@@ -113,7 +113,7 @@ func AttributeValidate(modl interface{}, data map[string]string) (bool, error) {
 
 				// Check that the located attribute accepts this
 				// type of input value
-				item, err := attr.accetps(val)
+				item, err := attr.Accepts(val)
 				if err != nil {
 					return false, err
 				}
