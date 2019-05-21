@@ -16,7 +16,7 @@ type Attribute struct {
 	Datatype string `sql:"TYPE:enum('int','decimal','string','bool');not null" json:"datatype" insert:"must"`
 
 	Mandatory uint8    `sql:"TYPE:tinyint unsigned;not null;DEFAULT:'0'" json:"mandatory"`
-	Superset  *JArr    `sql:"TYPE:json" json:"superset"`
+	Enums     *JArr    `sql:"TYPE:json" json:"enums"`
 	Units     *JArrStr `sql:"TYPE:json;" json:"units"`
 }
 
@@ -29,14 +29,14 @@ func (a Attribute) Accepts(inp string) (interface{}, error) {
 		return nil, err
 	}
 
-	// If superset is defined, then the given value
-	// must be one of values defined in superset array.
+	// If enums is defined, then the given value
+	// must be one of values defined in enums array.
 	// First do a simple value check, and then do a string
 	// based check also
-	if a.Superset != nil && !a.Superset.Contains(val) {
+	if a.Enums != nil && !a.Enums.Contains(val) {
 		found := false
-		for i := range *a.Superset {
-			item := (*a.Superset)[i]
+		for i := range *a.Enums {
+			item := (*a.Enums)[i]
 			if fmt.Sprint(item) == val {
 				found = true
 				break
@@ -44,7 +44,7 @@ func (a Attribute) Accepts(inp string) (interface{}, error) {
 		}
 
 		if !found {
-			return nil, fmt.Errorf("Innput %s must be one of Superset: %v", inp, *a.Superset)
+			return nil, fmt.Errorf("Innput %s must be one of Enums: %v", inp, *a.Enums)
 		}
 	}
 
