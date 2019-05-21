@@ -280,6 +280,13 @@ func initDynamicBehaviors() {
 		return []string{}
 	}
 
+	// MyISAM
+	behaveModel[MyISAM{}] = func(model interface{}) []string {
+		return []string{
+			"ALTER TABLE <<Table>> ENGINE = MyISAM",
+		}
+	}
+
 	// SEO
 	behaveModel[Seo{}] = func(model interface{}) []string {
 		s := Seo{}

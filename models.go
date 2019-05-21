@@ -75,6 +75,9 @@ type DynamicField struct {
 	Info *JDoc `sql:"TYPE:json" json:"info"`
 }
 
+type MyISAM struct {
+}
+
 type Seo struct {
 	URL          string `sql:"TYPE:varchar(256);not null;DEFAULT:''" json:"url" unique:"true"`
 	URLPast      *JArr  `sql:"TYPE:json;" json:"-" insert:"no" update:"no"`
