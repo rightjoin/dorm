@@ -29,6 +29,16 @@ type TimedLite struct {
 	UpdatedAt time.Time `sql:"TYPE:datetime;not null;DEFAULT:current_timestamp" json:"updated_at" insert:"no" update:"no"`
 }
 
+type Timed4 struct {
+	CreatedAt time.Time `sql:"TYPE:datetime(4);not null;DEFAULT:current_timestamp(4)" json:"created_at" insert:"no" update:"no"`
+	UpdatedAt time.Time `sql:"TYPE:datetime(4);not null;DEFAULT:current_timestamp(4)" json:"updated_at" insert:"no" update:"no" index:"true"`
+}
+
+type Timed4Lite struct {
+	CreatedAt time.Time `sql:"TYPE:datetime(4);not null;DEFAULT:current_timestamp(4)" json:"created_at" insert:"no" update:"no"`
+	UpdatedAt time.Time `sql:"TYPE:datetime(4);not null;DEFAULT:current_timestamp(4)" json:"updated_at" insert:"no" update:"no"`
+}
+
 type Historic struct {
 }
 

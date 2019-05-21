@@ -211,6 +211,75 @@ func initDynamicBehaviors() {
 		return []string{}
 	}
 
+	// TimedLite
+	behaveModel[TimedLite{}] = func(model interface{}) []string {
+		type Field struct {
+			Name    string  `gorm:"column:Field"`
+			Type    string  `gorm:"column:Type"`
+			Null    string  `gorm:"column:Null"`
+			Key     string  `gorm:"column:Key"`
+			Default *string `gorm:"column:Default"`
+			Extra   string  `gorm:"column:Extra"`
+		}
+		var f Field
+		err := db().Raw("show columns from " + Table(model) + " where Field = 'updated_at'").Find(&f).Error
+		if err != nil {
+			panic(err)
+		}
+		if !strings.Contains(strings.ToLower(f.Extra), "on update current_timestamp") {
+			return []string{
+				"ALTER TABLE <<Table>> MODIFY COLUMN updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
+			}
+		}
+		return []string{}
+	}
+
+	// Timed4
+	behaveModel[Timed4{}] = func(model interface{}) []string {
+		type Field struct {
+			Name    string  `gorm:"column:Field"`
+			Type    string  `gorm:"column:Type"`
+			Null    string  `gorm:"column:Null"`
+			Key     string  `gorm:"column:Key"`
+			Default *string `gorm:"column:Default"`
+			Extra   string  `gorm:"column:Extra"`
+		}
+		var f Field
+		err := db().Raw("show columns from " + Table(model) + " where Field = 'updated_at'").Find(&f).Error
+		if err != nil {
+			panic(err)
+		}
+		if !strings.Contains(strings.ToLower(f.Extra), "on update current_timestamp") {
+			return []string{
+				"ALTER TABLE <<Table>> MODIFY COLUMN updated_at DATETIME(4) NOT NULL DEFAULT CURRENT_TIMESTAMP(4) ON UPDATE CURRENT_TIMESTAMP(4)",
+			}
+		}
+		return []string{}
+	}
+
+	// Timed4Lite
+	behaveModel[Timed4Lite{}] = func(model interface{}) []string {
+		type Field struct {
+			Name    string  `gorm:"column:Field"`
+			Type    string  `gorm:"column:Type"`
+			Null    string  `gorm:"column:Null"`
+			Key     string  `gorm:"column:Key"`
+			Default *string `gorm:"column:Default"`
+			Extra   string  `gorm:"column:Extra"`
+		}
+		var f Field
+		err := db().Raw("show columns from " + Table(model) + " where Field = 'updated_at'").Find(&f).Error
+		if err != nil {
+			panic(err)
+		}
+		if !strings.Contains(strings.ToLower(f.Extra), "on update current_timestamp") {
+			return []string{
+				"ALTER TABLE <<Table>> MODIFY COLUMN updated_at DATETIME(4) NOT NULL DEFAULT CURRENT_TIMESTAMP(4) ON UPDATE CURRENT_TIMESTAMP(4)",
+			}
+		}
+		return []string{}
+	}
+
 	// SEO
 	behaveModel[Seo{}] = func(model interface{}) []string {
 		s := Seo{}
