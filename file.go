@@ -20,8 +20,9 @@ var fileSign = "*st:github.com/rightjoin/dorm.File"
 var FileRef = "UID" // Possible values are UID or ID
 
 type File struct {
-	Ref string `json:"ref"`
-	Src string `json:"src"`
+	Ref  string `json:"ref"`
+	Src  string `json:"src"`
+	Mime string `json:"mime"`
 }
 
 type Files []File

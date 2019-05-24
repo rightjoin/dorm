@@ -229,7 +229,8 @@ func (f Media) File() File {
 	}
 
 	return File{
-		Ref: ref,
-		Src: f.URL(),
+		Ref:  ref,
+		Src:  f.URL(),
+		Mime: f.Mime,
 	}
 }
