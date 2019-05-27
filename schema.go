@@ -221,6 +221,20 @@ func PopulateRows(records ...interface{}) {
 	}
 }
 
+func PopulateDB(dbo *gorm.DB, records ...interface{}) {
+	for _, row := range records {
+		txn := dbo.Begin()
+
+		err := txn.Create(row).Error
+		if err != nil {
+			txn.Rollback()
+			panic(err)
+		}
+
+		txn.Commit()
+	}
+}
+
 // setupUniqueIndexes uses the following formats to
 // create a unique index
 // unique:"true"
