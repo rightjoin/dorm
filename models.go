@@ -71,6 +71,11 @@ type SoftDelete struct {
 	DeletedAt *time.Time `sql:"TYPE:datetime;null;" json:"deleted_at" insert:"no" update:"no"`
 }
 
+type SoftDelete4 struct {
+	Deleted   uint8      `sql:"TYPE:tinyint(1) unsigned;not null;DEFAULT:'0'" json:"deleted" insert:"no" index:"true"`
+	DeletedAt *time.Time `sql:"TYPE:datetime(4);null;" json:"deleted_at" insert:"no" update:"no"`
+}
+
 type DynamicField struct {
 	Info *JDoc `sql:"TYPE:json" json:"info"`
 }

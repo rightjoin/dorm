@@ -60,6 +60,26 @@ func initStaticBehaviors() {
         END`,
 	}
 
+	// SoftDelete4
+	behave[SoftDelete4{}] = []string{
+		// do not allow delete action
+		`CREATE TRIGGER <<Table>>_softdelete_bfr_delete BEFORE DELETE ON <<Table>> FOR EACH ROW
+			IF TRUE THEN 
+				SIGNAL SQLSTATE '45000'
+				SET MESSAGE_TEXT = 'Cannot delete records from table. Instead set deleted=1';
+			END IF;`,
+		// update deleted_at timestamp
+		`CREATE TRIGGER <<Table>>_softdelete_bfr_update BEFORE UPDATE ON <<Table>> FOR EACH ROW
+			BEGIN
+				IF (OLD.deleted = 0) AND (NEW.deleted = 1) THEN
+					SET NEW.deleted_at = NOW(4);
+				END IF;
+				IF (OLD.deleted = 1) AND (NEW.deleted = 0) THEN
+					SET NEW.deleted_at = NULL;
+				END IF;
+			END`,
+	}
+
 	behave[Stateful{}] = []string{
 		`CREATE TRIGGER <<Table>>_stateful_bfr_insert BEFORE INSERT ON <<Table>> FOR EACH ROW
         BEGIN
