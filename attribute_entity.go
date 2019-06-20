@@ -22,6 +22,7 @@ type AttributeEntity struct {
 	Field  string `sql:"TYPE:varchar(64);not null;DEFAULT:'info'" json:"field" update:"no" unique:"idx_uniq_key(entity,field,code,active)"`
 
 	// Behaviours
+	// ToDo: Add SoftDelete
 	Active1
 	Historic
 	WhosThat

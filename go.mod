@@ -1,4 +1,4 @@
-module "https://github.com/rightjoin/dorm"
+module github.com/rightjoin/dorm
 
 go 1.12
 
@@ -16,7 +16,9 @@ require (
 	github.com/rightjoin/rlog v0.0.0-20190322103338-552cadac61e6
 	github.com/rightjoin/rutl v0.0.0-20190429034327-6ccca6b49792
 	github.com/serenize/snaker v0.0.0-20171204205717-a683aaf2d516 // indirect
+	github.com/smartystreets/goconvey v0.0.0-20190330032615-68dc04aab96a // indirect
 	github.com/spf13/cast v1.3.0 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.3 // indirect
+	github.com/stretchr/testify v1.2.2
 )
