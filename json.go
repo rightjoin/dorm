@@ -190,10 +190,10 @@ func (j *JArrInt) Scan(value interface{}) error {
 	return nil
 }
 
-func (j *JArrInt) Contains(i int) bool {
+func (j *JArrInt) Contains(needle int) bool {
 	arr := *j
 	for i := range arr {
-		if arr[i] == i {
+		if arr[i] == needle {
 			return true
 		}
 	}
