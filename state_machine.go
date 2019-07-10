@@ -157,10 +157,10 @@ func (j *Movements) Scan(value interface{}) error {
 // asynchronously to all the listeners (catchers)
 type StateLog struct {
 	PKey
-	Entity   string `sql:"TYPE:varchar(64);not null;" json:"entity" insert:"must" update:"no"`
-	EntityID uint   `sql:"not null;" json:"entity_id" insert:"must" update:"no"`
-	OldState string `sql:"TYPE:varchar(128);not null;DEFAULT:''" json:"old_state"`
-	NewState string `sql:"TYPE:varchar(128);not null;DEFAULT:''" json:"new_state"`
+	Entity   string  `sql:"TYPE:varchar(64);not null;" json:"entity" insert:"must" update:"no"`
+	EntityID uint    `sql:"not null;" json:"entity_id" insert:"must" update:"no"`
+	OldState *string `sql:"TYPE:varchar(128)" json:"old_state"`
+	NewState *string `sql:"TYPE:varchar(128)" json:"new_state"`
 	Timed
 	ProcessedAt *time.Time `sql:"null" json:"processed_at" index:"true"`
 	Error       *uint8     `sql:"TYPE:tinyint(1) unsigned;null" json:"error"`
@@ -169,10 +169,10 @@ type StateLog struct {
 
 type StateLog4 struct {
 	PKey
-	Entity   string `sql:"TYPE:varchar(64);not null;" json:"entity" insert:"must" update:"no"`
-	EntityID uint   `sql:"not null;" json:"entity_id" insert:"must" update:"no"`
-	OldState string `sql:"TYPE:varchar(128);not null;DEFAULT:''" json:"old_state"`
-	NewState string `sql:"TYPE:varchar(128);not null;DEFAULT:''" json:"new_state"`
+	Entity   string  `sql:"TYPE:varchar(64);not null;" json:"entity" insert:"must" update:"no"`
+	EntityID uint    `sql:"not null;" json:"entity_id" insert:"must" update:"no"`
+	OldState *string `sql:"TYPE:varchar(128)" json:"old_state"`
+	NewState *string `sql:"TYPE:varchar(128)" json:"new_state"`
 	Timed4Lite
 	ProcessedAt *time.Time `sql:"null" json:"processed_at" index:"true"`
 	Error       *uint8     `sql:"TYPE:tinyint(1) unsigned;null" json:"error"`
