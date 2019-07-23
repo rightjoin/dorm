@@ -22,7 +22,6 @@ type AttributeEntity struct {
 	Field  string `sql:"TYPE:varchar(64);not null;DEFAULT:'info'" json:"field" update:"no" unique:"idx_uniq_key(entity,field,code,active)"`
 
 	// Behaviours
-	// ToDo: Add SoftDelete
 	Active1
 	Historic
 	WhosThat
@@ -85,6 +84,8 @@ func AttributeValidate(modl interface{}, data map[string]string) (bool, error) {
 	// cached in the global variable
 	loadAttributes()
 
+	// Iterate over each of the fields of the struct represented by model,
+	// and check if needs validation
 	for _, fld := range refl.NestedFields(modl) {
 		//sgnt := refl.Signature(fld.Type)
 		sql := conv.CaseSnake(fld.Name)
@@ -99,22 +100,61 @@ func AttributeValidate(modl interface{}, data map[string]string) (bool, error) {
 		// for what field types should this be done? info/map/what else?
 
 		// We need to collage/merge keys of certain types under a
-		// single json like fiield, So loop through an aggregate them all
+		// single json like field, So loop through an aggregate them all
 		collated := make(map[string]interface{})
-		for key, val := range data {
-			if strings.HasPrefix(key, sql+".") {
-				// Locate the attribute
-				code := strings.Replace(key, sql+".", "", -1)
-				attr, found := attrMap[indexKey(table, sql, code)]
 
-				// Barf if not found
-				if !found {
-					return false, fmt.Errorf("attribute not found: %s", key)
+		// Locates an attribute and returns it's valid-value(value that's accepted by the attr)
+		validateReturnItem := func(code string, val string) (interface{}, error) {
+
+			// locate the attribute(i.e. code)
+			attr, found := attrMap[indexKey(table, sql, code)]
+			if !found {
+				return nil, fmt.Errorf("attribute not found: %s", code)
+			}
+
+			// Check that the located attribute accepts this
+			// type of input value
+			item, err := attr.Accepts(val)
+			if err != nil {
+				return false, err
+			}
+
+			return item, nil
+		}
+
+		// Handles cases where the input is already a json
+		if sql == "info" {
+			if info, ok := data["info"]; ok {
+				infoMap := make(map[string]string)
+				if err := json.Unmarshal([]byte(info), &infoMap); err != nil {
+					return false, err
 				}
 
-				// Check that the located attribute accepts this
-				// type of input value
-				item, err := attr.Accepts(val)
+				for key, val := range infoMap {
+
+					item, err := validateReturnItem(key, val)
+					if err != nil {
+						return false, err
+					}
+
+					collated[key] = item
+				}
+
+				// Delete info field
+				delete(data, "info")
+			}
+		}
+
+		// collates form data or data in the format of "someObj.someKey"
+		for key, val := range data {
+
+			// Handles all the cases where the input is in the form of "info.key",
+			// i.e. if it's a form data, would fail incase of json/application
+			if strings.HasPrefix(key, sql+".") {
+
+				code := strings.Replace(key, sql+".", "", -1)
+
+				item, err := validateReturnItem(code, val)
 				if err != nil {
 					return false, err
 				}
@@ -122,6 +162,7 @@ func AttributeValidate(modl interface{}, data map[string]string) (bool, error) {
 				// all good, so lets collate "property" part of info.property
 				collated[code] = item
 			}
+
 		}
 
 		// merge all collated items into a single value
