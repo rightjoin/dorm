@@ -139,9 +139,6 @@ func AttributeValidate(modl interface{}, data map[string]string) (bool, error) {
 
 					collated[key] = item
 				}
-
-				// Delete info field
-				delete(data, "info")
 			}
 		}
 
