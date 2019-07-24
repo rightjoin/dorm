@@ -125,14 +125,14 @@ func AttributeValidate(modl interface{}, data map[string]string) (bool, error) {
 		// Handles cases where the input is already a json
 		if sql == "info" {
 			if info, ok := data["info"]; ok {
-				infoMap := make(map[string]string)
+				infoMap := make(map[string]interface{})
 				if err := json.Unmarshal([]byte(info), &infoMap); err != nil {
 					return false, err
 				}
 
 				for key, val := range infoMap {
 
-					item, err := validateReturnItem(key, val, sql)
+					item, err := validateReturnItem(key, fmt.Sprint(val), sql)
 					if err != nil {
 						return false, err
 					}
