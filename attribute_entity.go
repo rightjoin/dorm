@@ -84,6 +84,25 @@ func AttributeValidate(modl interface{}, data map[string]string) (bool, error) {
 	// cached in the global variable
 	loadAttributes()
 
+	// Locates an attribute and returns it's valid-value(value that's accepted by the attr)
+	validateReturnItem := func(code, val, sql string) (interface{}, error) {
+
+		// locate the attribute(i.e. code)
+		attr, found := attrMap[indexKey(table, sql, code)]
+		if !found {
+			return nil, fmt.Errorf("attribute not found: %s", code)
+		}
+
+		// Check that the located attribute accepts this
+		// type of input value
+		item, err := attr.Accepts(val)
+		if err != nil {
+			return false, err
+		}
+
+		return item, nil
+	}
+
 	// Iterate over each of the fields of the struct represented by model,
 	// and check if needs validation
 	for _, fld := range refl.NestedFields(modl) {
@@ -103,25 +122,6 @@ func AttributeValidate(modl interface{}, data map[string]string) (bool, error) {
 		// single json like field, So loop through an aggregate them all
 		collated := make(map[string]interface{})
 
-		// Locates an attribute and returns it's valid-value(value that's accepted by the attr)
-		validateReturnItem := func(code string, val string) (interface{}, error) {
-
-			// locate the attribute(i.e. code)
-			attr, found := attrMap[indexKey(table, sql, code)]
-			if !found {
-				return nil, fmt.Errorf("attribute not found: %s", code)
-			}
-
-			// Check that the located attribute accepts this
-			// type of input value
-			item, err := attr.Accepts(val)
-			if err != nil {
-				return false, err
-			}
-
-			return item, nil
-		}
-
 		// Handles cases where the input is already a json
 		if sql == "info" {
 			if info, ok := data["info"]; ok {
@@ -132,7 +132,7 @@ func AttributeValidate(modl interface{}, data map[string]string) (bool, error) {
 
 				for key, val := range infoMap {
 
-					item, err := validateReturnItem(key, val)
+					item, err := validateReturnItem(key, val, sql)
 					if err != nil {
 						return false, err
 					}
@@ -154,7 +154,7 @@ func AttributeValidate(modl interface{}, data map[string]string) (bool, error) {
 
 				code := strings.Replace(key, sql+".", "", -1)
 
-				item, err := validateReturnItem(code, val)
+				item, err := validateReturnItem(code, val, sql)
 				if err != nil {
 					return false, err
 				}
