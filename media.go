@@ -16,6 +16,7 @@ import (
 	"strings"
 
 	"github.com/rightjoin/fig"
+	"gocv.io/x/gocv"
 )
 
 type Media struct {
@@ -58,15 +59,6 @@ func NewMedia(f multipart.File, fh *multipart.FileHeader, entity, field string, 
 	// File extension
 	md.Extn = filepath.Ext(fh.Filename)[1:]
 
-	// Dimensions (if it is an image)
-	if strings.HasPrefix(md.Mime, "image/") {
-		img, _, err := image.DecodeConfig(bytes.NewReader(buf.Bytes()))
-		if err == nil {
-			md.Width = &img.Width
-			md.Height = &img.Height
-		}
-	}
-
 	// Filename:
 	// remove spaces and better yet, all non-alphanumeric
 	// characters from the filename. keeps it simple and avoids
@@ -78,6 +70,52 @@ func NewMedia(f multipart.File, fh *multipart.FileHeader, entity, field string, 
 	md.Entity = entity
 	md.Field = field
 	md.Who = NewJDoc2(who)
+
+	// Dimensions (if it is an image)
+	if strings.HasPrefix(md.Mime, "image/") {
+		img, _, err := image.DecodeConfig(bytes.NewReader(buf.Bytes()))
+		if err == nil {
+			md.Width = &img.Width
+			md.Height = &img.Height
+		}
+	}
+
+	// Frames' properties (if it is a video)
+	if strings.HasPrefix(md.Mime, "video/") {
+
+		// Write the content into a temp directory
+		path, err := md.DiskWrite(buf.Bytes(), true)
+		if err != nil {
+			return nil, err
+		}
+
+		v, err := gocv.VideoCaptureFile(path)
+		if err != nil {
+			fmt.Println(err)
+		}
+		defer v.Close()
+
+		if v.IsOpened() {
+			height := v.Get(gocv.VideoCaptureFrameHeight)
+			width := v.Get(gocv.VideoCaptureFrameWidth)
+			fps := v.Get(gocv.VideoCaptureFPS)
+
+			err = md.ValidateFrame(height, width, fps)
+
+			// remove the temp file
+			os.Remove(path)
+
+			if err != nil {
+				return nil, err
+			}
+
+			intW := int(width)
+			intH := int(height)
+
+			md.Width = &intW
+			md.Height = &intH
+		}
+	}
 
 	// Validation for size & dimensions
 	if err := md.ValidateSize(); err != nil {
@@ -93,7 +131,7 @@ func NewMedia(f multipart.File, fh *multipart.FileHeader, entity, field string, 
 	dbo.Where("id=?", md.ID).Find(&md)
 
 	// Save bytes to disk (second)
-	err = md.DiskWrite(buf.Bytes())
+	_, err = md.DiskWrite(buf.Bytes(), false)
 	if err != nil {
 		return nil, err
 	}
@@ -165,37 +203,118 @@ func (f Media) ValidateSize() error {
 	return nil
 }
 
+// ValidateFrame checks the constraints for a video frame
+// Allowed configurations include:
+//    media.validations.max-kb (10*1024 = 10MB default)
+//    media.validations.product.max-kb
+//    media.validations.product.rear-view.max-kb
+//    media.validations.product.video.exact-w
+//    media.validations.product.video.min-w
+// Overall default max size the system assumes if there is
+// no configuration provided is 10MB.
+func (f Media) ValidateFrame(fHeigth, fWidth, fps float64) error {
+	prefix := "media.validations"
+	maxKB := "max-kb"
+
+	// if validations are disabled, then skip all checks
+	if fig.BoolOr(true, prefix, "active") == false {
+		return nil
+	}
+
+	// validate file size::
+	max := fig.IntOr(0, prefix, f.Entity, f.Field, maxKB) // field level max value
+	if max == 0 {
+		max = fig.IntOr(0, prefix, f.Entity, maxKB) // entity level max value
+	}
+	if max == 0 {
+		max = fig.IntOr(10*1024, prefix, maxKB) // global max value (default to 10MB)
+	}
+	if f.Size > uint(max*1024) {
+		return fmt.Errorf("file max limit of %d kb exceeded. %d b found in %s", max, f.Size, f.Name)
+	}
+
+	// validate video's frame dimensions:
+	if strings.HasPrefix(f.Mime, "video/") {
+		w := fig.IntOr(0, prefix, f.Entity, f.Field, "exact-w")
+		h := fig.IntOr(0, prefix, f.Entity, f.Field, "exact-h")
+		minW := fig.IntOr(0, prefix, f.Entity, f.Field, "min-w")
+		minH := fig.IntOr(0, prefix, f.Entity, f.Field, "min-h")
+		maxH := fig.IntOr(0, prefix, f.Entity, f.Field, "max-h")
+		maxW := fig.IntOr(0, prefix, f.Entity, f.Field, "max-w")
+		minFps := fig.IntOr(0, prefix, f.Entity, f.Field, "min-fps")
+		maxFps := fig.IntOr(0, prefix, f.Entity, f.Field, "max-fps")
+
+		// exact dimension checks
+		if w != 0 && w != int(fWidth) {
+			return fmt.Errorf("expected width %d, found %d in %s", w, int(fWidth), f.Name)
+		}
+		if h != 0 && h != int(fHeigth) {
+			return fmt.Errorf("expected height %d, found %d in %s", h, int(fHeigth), f.Name)
+		}
+
+		// min dimension checks
+		if minW != 0 && int(fWidth) < minW {
+			return fmt.Errorf("min width %d, found %d in %s", minW, int(fWidth), f.Name)
+		}
+		if minH != 0 && int(fHeigth) < minH {
+			return fmt.Errorf("min height %d, found %d in %s", minH, int(fHeigth), f.Name)
+		}
+		if minFps != 0 && int(fps) < minFps {
+			return fmt.Errorf("min fps %d, found %d in %s", minFps, int(fps), f.Name)
+		}
+
+		// max dimension checks
+		if maxW != 0 && int(fWidth) > maxW {
+			return fmt.Errorf("max width %d, found %d in %s", maxW, int(fWidth), f.Name)
+		}
+		if maxH != 0 && int(fHeigth) > maxH {
+			return fmt.Errorf("max height %d, found %d in %s", maxH, int(fHeigth), f.Name)
+		}
+		if maxFps != 0 && int(fps) > maxFps {
+			return fmt.Errorf("min fps %d, found %d in %s", maxFps, int(fps), f.Name)
+		}
+
+	}
+
+	return nil
+}
+
 // DiskWrite writes the content of file passed as input
 // parameter to the correct folder on disk.
-func (f Media) DiskWrite(raw []byte) error {
+// If the flag temp is set, the file gets written in to a temp directory.
+func (f Media) DiskWrite(raw []byte, temp bool) (string, error) {
 
 	// path at which the files are found
 	directory := fig.StringOr("./media", "media.folder")
 	if !strings.HasSuffix(directory, "/") {
 		directory += "/"
 	}
-	directory += f.Folder()
+	if temp {
+		directory += "temp"
+	} else {
+		directory += f.Folder()
+	}
 
 	// create nested folders
 	err := os.MkdirAll(directory, 0755)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	// touch file on disk
 	path := fmt.Sprintf("%s/%s", directory, f.Name)
 	out, err := os.Create(path)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	// write content to file on disk
 	_, err = io.Copy(out, bytes.NewReader(raw))
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	return nil
+	return path, nil
 }
 
 // Folder retrieves the path at which the file is
