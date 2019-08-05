@@ -67,6 +67,9 @@ func NewMedia(f multipart.File, fh *multipart.FileHeader, entity, field string, 
 		}
 	}
 
+	// TODO:
+	// If it is video type, extract width and height, and store it here
+
 	// Filename:
 	// remove spaces and better yet, all non-alphanumeric
 	// characters from the filename. keeps it simple and avoids
@@ -229,8 +232,10 @@ func (f Media) File() File {
 	}
 
 	return File{
-		Ref:  ref,
-		Src:  f.URL(),
-		Mime: f.Mime,
+		Ref:    ref,
+		Src:    f.URL(),
+		Mime:   f.Mime,
+		Width:  f.Width,
+		Height: f.Height,
 	}
 }
