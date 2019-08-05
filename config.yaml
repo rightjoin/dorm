@@ -7,4 +7,9 @@ database:
         password: dba
         db:       dorm_testing
         timezone: Asia/Calcutta
+
+media:
+    image:
+        width: 1280
+        heigth: 800
         

@@ -64,7 +64,20 @@ func NewMedia(f multipart.File, fh *multipart.FileHeader, entity, field string, 
 		if err == nil {
 			md.Width = &img.Width
 			md.Height = &img.Height
+
+			desWidth := fig.Int("meida", "image", "width")
+			desHeight := fig.Int("media", "image", "heigth")
+
+			// Neither of the image parameters can be more than the expected
+			if *md.Width > desWidth || *md.Height > desHeight {
+				return nil, fmt.Errorf("Expected resoltion %d * %d, found: %d * %d", desWidth, desHeight, *md.Width, *md.Height)
+			}
 		}
+	}
+
+	// Check for video too
+	if strings.HasPrefix(md.Mime, "video/") {
+		
 	}
 
 	// Filename:
