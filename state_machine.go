@@ -14,6 +14,11 @@ type Stateful struct {
 	StatedAt     *time.Time `sql:"TYPE:datetime;null;" json:"stated_at" insert:"no" update:"no"`
 }
 
+type Stateful4 struct {
+	MachineState *string    `sql:"TYPE:varchar(96);null" json:"machine_state"`
+	StatedAt     *time.Time `sql:"TYPE:datetime(4);null;" json:"stated_at" insert:"no" update:"no"`
+}
+
 // StateMachine is the database table that contains all the states
 // and transitions for a given entity that implements Stateful behavior
 type StateMachine struct {
@@ -146,17 +151,34 @@ func (j *Movements) Scan(value interface{}) error {
 	return nil
 }
 
-// StateQueue is database table that contains all the
+// StateLog is database table that contains all the
 // transitions of state machines of different entities.
 // A separate process reads from this table, and dispatches the events
 // asynchronously to all the listeners (catchers)
-type StateQueue struct {
+type StateLog struct {
 	PKey
-	Entity   string `sql:"TYPE:varchar(64);not null;" json:"entity" insert:"must" update:"no"`
-	EntityID uint   `sql:"not null;" json:"entity_id" insert:"must" update:"no"`
-	OldState string `sql:"TYPE:varchar(128);not null;DEFAULT:''" json:"old_state"`
-	NewState string `sql:"TYPE:varchar(128);not null;DEFAULT:''" json:"new_state"`
+	Entity   string  `sql:"TYPE:varchar(64);not null;" json:"entity" insert:"must" update:"no"`
+	EntityID uint    `sql:"not null;" json:"entity_id" insert:"must" update:"no"`
+	OldState *string `sql:"TYPE:varchar(128)" json:"old_state"`
+	NewState *string `sql:"TYPE:varchar(128)" json:"new_state"`
 	Timed
 	ProcessedAt *time.Time `sql:"null" json:"processed_at" index:"true"`
 	Error       *uint8     `sql:"TYPE:tinyint(1) unsigned;null" json:"error"`
+	WhosThat
+}
+
+type StateLog4 struct {
+	PKey
+	Entity   string  `sql:"TYPE:varchar(64);not null;" json:"entity" insert:"must" update:"no"`
+	EntityID uint    `sql:"not null;" json:"entity_id" insert:"must" update:"no"`
+	OldState *string `sql:"TYPE:varchar(128)" json:"old_state"`
+	NewState *string `sql:"TYPE:varchar(128)" json:"new_state"`
+	Timed4Lite
+	ProcessedAt *time.Time `sql:"null" json:"processed_at" index:"true"`
+	Error       *uint8     `sql:"TYPE:tinyint(1) unsigned;null" json:"error"`
+	WhosThat
+}
+
+func (sq StateLog4) TableName() string {
+	return "state_log"
 }
