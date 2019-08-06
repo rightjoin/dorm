@@ -67,11 +67,6 @@ func NewMedia(f multipart.File, fh *multipart.FileHeader, entity, field string, 
 		}
 	}
 
-	// Check for video too
-	if strings.HasPrefix(md.Mime, "video/") {
-
-	}
-
 	// Filename:
 	// remove spaces and better yet, all non-alphanumeric
 	// characters from the filename. keeps it simple and avoids
@@ -244,8 +239,10 @@ func (f Media) File() File {
 	}
 
 	return File{
-		Ref:  ref,
-		Src:  f.URL(),
-		Mime: f.Mime,
+		Ref:    ref,
+		Src:    f.URL(),
+		Mime:   f.Mime,
+		Width:  f.Width,
+		Height: f.Height,
 	}
 }
