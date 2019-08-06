@@ -45,6 +45,7 @@ func (a AttributeEntity) Triggers() []string {
 }
 
 var attrMap map[string]AttributeEntity
+var mandatoryAttr map[string]bool
 var attrMutex sync.Mutex
 
 // TODO:
@@ -64,10 +65,16 @@ func loadAttributes() {
 		}
 
 		attrMap = make(map[string]AttributeEntity)
+		mandatoryAttr = make(map[string]bool)
 
 		for _, a := range attrs {
 			codeKey := indexKey(a.Entity, a.Field, a.Code)
 			attrMap[codeKey] = a
+
+			// Set mandatory flag against the attribute
+			if a.Mandatory > 0 {
+				mandatoryAttr[a.Code] = true
+			}
 		}
 	}
 	attrMutex.Unlock()
@@ -126,6 +133,15 @@ func AttributeValidate(modl interface{}, data map[string]string) (bool, error) {
 
 		// merge all collated items into a single value
 		if len(collated) > 0 {
+
+			// Validate the presence of mandatory attr
+			for key := range mandatoryAttr {
+				if _, ok := collated[key]; !ok {
+					return false, fmt.Errorf("Mandatory attribute %s missing", key)
+				}
+
+			}
+
 			b, err := json.Marshal(collated)
 			if err != nil {
 				return false, errors.New("could not encode to json")
