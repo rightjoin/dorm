@@ -8,6 +8,7 @@ import (
 	_ "image/jpeg"
 	_ "image/png"
 	"io"
+	"io/ioutil"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -101,9 +102,6 @@ func NewMedia(f multipart.File, fh *multipart.FileHeader, entity, field string, 
 
 			// remove the temp file
 			os.Remove(path)
-			if err != nil {
-				return nil, err
-			}
 
 			intW := int(width)
 			intH := int(height)
@@ -219,10 +217,19 @@ func (f Media) DiskWrite(raw []byte, temp bool) (string, error) {
 		directory += "/"
 	}
 	if temp {
-		directory += "temp"
-	} else {
-		directory += f.Folder()
+		tempFile, err := ioutil.TempFile("", "video")
+		if err != nil {
+			return "", nil
+		}
+
+		if _, err := tempFile.Write(raw); err != nil {
+			return "", err
+		}
+
+		return tempFile.Name(), nil
 	}
+
+	directory += f.Folder()
 
 	// create nested folders
 	err := os.MkdirAll(directory, 0755)
