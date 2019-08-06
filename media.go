@@ -140,8 +140,7 @@ func (f Media) BeforeCommit() error {
 }
 
 // ValidateSize checks the file size and file dimensions
-// of the given media (if it is an image) against the
-// desired configuration values provided.
+// of the given media against the desired configuration values provided.
 // Allowed configurations include:
 //    media.validations.max-kb (10*1024 = 10MB default)
 //    media.validations.product.max-kb
