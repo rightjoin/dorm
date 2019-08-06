@@ -67,9 +67,6 @@ func NewMedia(f multipart.File, fh *multipart.FileHeader, entity, field string, 
 		}
 	}
 
-	// TODO:
-	// If it is video type, extract width and height, and store it here
-
 	// Filename:
 	// remove spaces and better yet, all non-alphanumeric
 	// characters from the filename. keeps it simple and avoids
@@ -146,6 +143,8 @@ func (f Media) ValidateSize() error {
 		h := fig.IntOr(0, prefix, f.Entity, f.Field, "exact-h")
 		minW := fig.IntOr(0, prefix, f.Entity, f.Field, "min-w")
 		minH := fig.IntOr(0, prefix, f.Entity, f.Field, "min-h")
+		maxW := fig.IntOr(0, prefix, f.Entity, f.Field, "max-w")
+		maxH := fig.IntOr(0, prefix, f.Entity, f.Field, "max-h")
 
 		// exact dimension checks
 		if w != 0 && w != *f.Width {
@@ -161,6 +160,14 @@ func (f Media) ValidateSize() error {
 		}
 		if minH != 0 && *f.Height < minH {
 			return fmt.Errorf("min height %d, found %d in %s", minH, *f.Height, f.Name)
+		}
+
+		// max dimension checks
+		if maxW != 0 && *f.Width > maxW {
+			return fmt.Errorf("max width %d, found %d in %s", maxW, *f.Width, f.Name)
+		}
+		if maxH != 0 && *f.Height > maxH {
+			return fmt.Errorf("max height %d, found %d in %s", minH, *f.Height, f.Name)
 		}
 	}
 
