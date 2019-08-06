@@ -98,13 +98,9 @@ func NewMedia(f multipart.File, fh *multipart.FileHeader, entity, field string, 
 		if v.IsOpened() {
 			height := v.Get(gocv.VideoCaptureFrameHeight)
 			width := v.Get(gocv.VideoCaptureFrameWidth)
-			fps := v.Get(gocv.VideoCaptureFPS)
-
-			err = md.ValidateFrame(height, width, fps)
 
 			// remove the temp file
 			os.Remove(path)
-
 			if err != nil {
 				return nil, err
 			}
