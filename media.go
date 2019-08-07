@@ -124,13 +124,18 @@ func NewMedia(f multipart.File, fh *multipart.FileHeader, entity, field string, 
 	}
 	dbo.Where("id=?", md.ID).Find(&md)
 
-	// Upload to S3
-	
-
 	// Save bytes to disk (second)
-	_, err = md.DiskWrite(buf.Bytes(), false)
+	path, err := md.DiskWrite(buf.Bytes(), false)
 	if err != nil {
 		return nil, err
+	}
+
+	// Upload to S3
+	uploadToS3 := fig.BoolOr(false, "media.s3.upload")
+	if uploadToS3 {
+		if err = UploadToS3(buf.Bytes(), path, fsize); err != nil {
+			return nil, err
+		}
 	}
 
 	return &md, nil
