@@ -16,41 +16,41 @@ func TestAttributeBool(t *testing.T) {
 	}
 
 	// Truthy
-	val, err = a.accetps("true")
+	val, err = a.Accepts("true")
 	assert.Equal(t, true, val)
 	assert.Nil(t, err)
 
-	val, err = a.accetps("yes")
+	val, err = a.Accepts("yes")
 	assert.Equal(t, true, val)
 	assert.Nil(t, err)
 
-	val, err = a.accetps("Y")
+	val, err = a.Accepts("Y")
 	assert.Equal(t, true, val)
 	assert.Nil(t, err)
 
-	val, err = a.accetps("1")
+	val, err = a.Accepts("1")
 	assert.Equal(t, true, val)
 	assert.Nil(t, err)
 
 	// Falsy
-	val, err = a.accetps("false")
+	val, err = a.Accepts("false")
 	assert.Equal(t, false, val)
 	assert.Nil(t, err)
 
-	val, err = a.accetps("No")
+	val, err = a.Accepts("No")
 	assert.Equal(t, false, val)
 	assert.Nil(t, err)
 
-	val, err = a.accetps("N")
+	val, err = a.Accepts("N")
 	assert.Equal(t, false, val)
 	assert.Nil(t, err)
 
-	val, err = a.accetps("0")
+	val, err = a.Accepts("0")
 	assert.Equal(t, false, val)
 	assert.Nil(t, err)
 
 	// Incorrect input
-	val, err = a.accetps("123")
+	val, err = a.Accepts("123")
 	assert.NotNil(t, err)
 }
 
@@ -64,12 +64,12 @@ func TestAttributeInt(t *testing.T) {
 	}
 
 	// Truthy
-	val, err = a.accetps("12345")
+	val, err = a.Accepts("12345")
 	assert.Equal(t, 12345, val)
 	assert.Nil(t, err)
 
 	// Incorrect input
-	val, err = a.accetps("abc")
+	val, err = a.Accepts("abc")
 	assert.NotNil(t, err)
 }
 
@@ -83,12 +83,12 @@ func TestAttributeDecimal(t *testing.T) {
 	}
 
 	// Truthy
-	val, err = a.accetps("123.45")
+	val, err = a.Accepts("123.45")
 	assert.Equal(t, 123.45, val)
 	assert.Nil(t, err)
 
 	// Incorrect input
-	val, err = a.accetps("abc")
+	val, err = a.Accepts("abc")
 	assert.NotNil(t, err)
 }
 
@@ -102,11 +102,11 @@ func TestAttributeString(t *testing.T) {
 	}
 
 	// Truthy
-	val, err = a.accetps("whassup")
+	val, err = a.Accepts("whassup")
 	assert.Equal(t, "whassup", val)
 	assert.Nil(t, err)
 
-	val, err = a.accetps("123")
+	val, err = a.Accepts("123")
 	assert.NotEqual(t, 123, val)
 }
 
@@ -118,40 +118,37 @@ func TestAttributeSuperset(t *testing.T) {
 	// String superset
 	stry := Attribute{
 		Datatype: "string",
-		Superset: NewJArr("a", "b", "c"),
 	}
 
-	val, err = stry.accetps("a")
+	val, err = stry.Accepts("a")
 	assert.Equal(t, "a", val)
 	assert.Nil(t, err)
 
-	val, err = stry.accetps("d")
+	val, err = stry.Accepts("d")
 	assert.NotNil(t, err)
 
 	// Int superset
 	inty := Attribute{
 		Datatype: "int",
-		Superset: NewJArr(123, 456, 789),
 	}
 
-	val, err = inty.accetps("123")
+	val, err = inty.Accepts("123")
 	assert.Equal(t, 123, val)
 	assert.Nil(t, err)
 
-	val, err = inty.accetps("901")
+	val, err = inty.Accepts("901")
 	assert.NotNil(t, err)
 
 	// Decimal superset
 	decy := Attribute{
 		Datatype: "decimal",
-		Superset: NewJArr(1.23, 4.56, 7.89),
 	}
 
-	val, err = decy.accetps("1.23")
+	val, err = decy.Accepts("1.23")
 	assert.Equal(t, 1.23, val)
 	assert.Nil(t, err)
 
-	val, err = decy.accetps("9.01")
+	val, err = decy.Accepts("9.01")
 	assert.NotNil(t, err)
 }
 
@@ -166,16 +163,16 @@ func TestAttributeUnits(t *testing.T) {
 	}
 
 	// Truthy
-	val, err = stry.accetps("1 km")
+	val, err = stry.Accepts("1 km")
 	assert.Equal(t, "1 km", val)
 	assert.Nil(t, err)
 
-	val, err = stry.accetps("1.25 mm")
+	val, err = stry.Accepts("1.25 mm")
 	assert.Equal(t, "1.25 mm", val)
 	assert.Nil(t, err)
 
 	// Error
-	val, err = stry.accetps("5 m")
+	val, err = stry.Accepts("5 m")
 	assert.NotNil(t, err)
 
 }
