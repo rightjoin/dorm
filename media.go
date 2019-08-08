@@ -133,7 +133,7 @@ func NewMedia(f multipart.File, fh *multipart.FileHeader, entity, field string, 
 	// Upload to S3
 	uploadToS3 := fig.BoolOr(false, "media.s3.upload")
 	if uploadToS3 {
-		if err = UploadToS3(buf.Bytes(), path, fsize); err != nil {
+		if err = UploadToS3(buf.Bytes(), path, md.Mime, fsize); err != nil {
 			return nil, err
 		}
 	}

@@ -3,7 +3,6 @@ package dorm
 import (
 	"bytes"
 	"fmt"
-	"net/http"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -12,9 +11,14 @@ import (
 )
 
 // UploadToS3 uploads the given contents of a file to s3 upon the given key.
-func UploadToS3(raw []byte, key string, size int64) error {
-	s3Region := fig.StringOr("ap-south-1", "media.s3.region")
-	s3Bucket := fig.StringOr("my-bucket", "media.s3.bucket")
+// Allowed configurations include:
+//    media.s3.region - describes the region for aws
+//    media.s3.bucket - describes the bucket for data to be uploaded
+//    media.s3.local - true/false; states whether local s3 is to be used
+//    media.s3.port - port for the local  running s3
+func UploadToS3(raw []byte, key, mime string, size int64) error {
+	s3Region := fig.String("media.s3.region")
+	s3Bucket := fig.String("media.s3.bucket")
 
 	config := &aws.Config{
 		Region: aws.String(s3Region),
@@ -52,7 +56,7 @@ func UploadToS3(raw []byte, key string, size int64) error {
 		Key:           aws.String(key),
 		Body:          bytes.NewReader(raw),
 		ContentLength: aws.Int64(size),
-		ContentType:   aws.String(http.DetectContentType(raw)),
+		ContentType:   aws.String(mime),
 	}
 
 	// Upload
