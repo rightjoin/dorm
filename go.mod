@@ -5,6 +5,7 @@ go 1.12
 require (
 	bitbucket.org/rightjoin/ion v0.0.0-20180416091501-e8acdfa411da
 	github.com/asaskevich/govalidator v0.0.0-20190424111038-f61b66f89f4a
+	github.com/aws/aws-sdk-go v1.22.0
 	github.com/azer/snakecase v1.0.0 // indirect
 	github.com/go-sql-driver/mysql v1.4.1
 	github.com/inconshreveable/log15 v0.0.0-20180818164646-67afb5ed74ec // indirect
