@@ -217,7 +217,7 @@ func initStaticBehaviors() {
 			DECLARE tmp    VARCHAR(128);
 
 			# fetch state machine
-			SELECT default_state, entry_states, states, count(1) INTO deft, entr, sts, fnd FROM state_machine WHERE entity = '<<Table>>'; 	
+			SELECT default_state, entry_states, states, count(1) INTO deft, entr, sts, fnd FROM state_machine WHERE entity = '<<Table>>' AND kind = NEW.kind; 	
 
 			SET tmpe = CAST(entr AS CHAR);
 			SET tmps = CAST(sts AS CHAR);
@@ -263,15 +263,19 @@ func initStaticBehaviors() {
 			# is a new state being set
 			IF NOT NEW.machine_state IS NULL THEN 
 			
-				SELECT default_state, entry_states, states, transitions, count(1) INTO deft, entr, sts, trns, fnd FROM state_machine WHERE entity = '<<Table>>';
+				SELECT default_state, entry_states, states, transitions, count(1) INTO deft, entr, sts, trns, fnd FROM state_machine WHERE entity = '<<Table>>' AND kind = NEW.kind;
 
 				SET tmpe = CAST(entr AS CHAR);
 				SET tmps = CAST(sts AS CHAR);
 				SET tmpt = CAST(trns AS CHAR);
 				SET tmpn = JSON_ARRAY(CAST(NEW.machine_state AS CHAR));
 				
+				# cannot update kind
+				IF OLD.kind != NEW.kind THEN
+					SIGNAL SQLSTATE '45000'
+					SET MESSAGE_TEXT = 'cannot update kind';
 				# state machine must be defined
-				IF fnd = 0 THEN
+				ELSEIF fnd = 0 THEN
 					SIGNAL SQLSTATE '45000'
 					SET MESSAGE_TEXT = 'State machine definition is missing';
 				ELSE
