@@ -51,7 +51,7 @@ var attrMutex sync.Mutex
 // TODO:
 // attrMap should destroy itself in every 5 min, so that
 // any latest changes can go live in 5 min
-func loadAttributes() {
+func loadAttributes(entity string) {
 	if attrMap != nil {
 		return
 	}
@@ -72,7 +72,7 @@ func loadAttributes() {
 			attrMap[codeKey] = a
 
 			// Set mandatory flag against the attribute
-			if a.Mandatory > 0 {
+			if a.Mandatory > 0 && a.Entity == entity {
 				mandatoryAttr[a.Code] = true
 			}
 		}
@@ -84,13 +84,13 @@ func indexKey(index ...string) string {
 	return strings.Join(index, "___")
 }
 
-func AttributeValidate(modl interface{}, data map[string]string) (bool, error) {
+func AttributeValidate(modl interface{}, entity string, data map[string]string) (bool, error) {
 
-	var table = Table(modl)
+	// var table = Table(modl)
 
 	// Load all the attributes, if they are not already
 	// cached in the global variable
-	loadAttributes()
+	loadAttributes(entity)
 
 	for _, fld := range refl.NestedFields(modl) {
 		//sgnt := refl.Signature(fld.Type)
@@ -112,7 +112,7 @@ func AttributeValidate(modl interface{}, data map[string]string) (bool, error) {
 			if strings.HasPrefix(key, sql+".") {
 				// Locate the attribute
 				code := strings.Replace(key, sql+".", "", -1)
-				attr, found := attrMap[indexKey(table, sql, code)]
+				attr, found := attrMap[indexKey(entity, sql, code)]
 
 				// Barf if not found
 				if !found {
