@@ -8,6 +8,7 @@ import (
 	_ "image/jpeg"
 	_ "image/png"
 	"io"
+	"io/ioutil"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -16,6 +17,7 @@ import (
 	"strings"
 
 	"github.com/rightjoin/fig"
+	"gocv.io/x/gocv"
 )
 
 type Media struct {
@@ -58,15 +60,6 @@ func NewMedia(f multipart.File, fh *multipart.FileHeader, entity, field string, 
 	// File extension
 	md.Extn = filepath.Ext(fh.Filename)[1:]
 
-	// Dimensions (if it is an image)
-	if strings.HasPrefix(md.Mime, "image/") {
-		img, _, err := image.DecodeConfig(bytes.NewReader(buf.Bytes()))
-		if err == nil {
-			md.Width = &img.Width
-			md.Height = &img.Height
-		}
-	}
-
 	// Filename:
 	// remove spaces and better yet, all non-alphanumeric
 	// characters from the filename. keeps it simple and avoids
@@ -78,6 +71,45 @@ func NewMedia(f multipart.File, fh *multipart.FileHeader, entity, field string, 
 	md.Entity = entity
 	md.Field = field
 	md.Who = NewJDoc2(who)
+
+	// Dimensions (if it is an image)
+	if strings.HasPrefix(md.Mime, "image/") {
+		img, _, err := image.DecodeConfig(bytes.NewReader(buf.Bytes()))
+		if err == nil {
+			md.Width = &img.Width
+			md.Height = &img.Height
+		}
+	}
+
+	// Frames' properties (if it is a video)
+	if strings.HasPrefix(md.Mime, "video/") {
+
+		// Write the content into a temp directory
+		path, err := md.DiskWrite(buf.Bytes(), true)
+		if err != nil {
+			return nil, err
+		}
+
+		v, err := gocv.VideoCaptureFile(path)
+		if err != nil {
+			fmt.Println(err)
+		}
+		defer v.Close()
+
+		if v.IsOpened() {
+			height := v.Get(gocv.VideoCaptureFrameHeight)
+			width := v.Get(gocv.VideoCaptureFrameWidth)
+
+			// remove the temp file
+			os.Remove(path)
+
+			intW := int(width)
+			intH := int(height)
+
+			md.Width = &intW
+			md.Height = &intH
+		}
+	}
 
 	// Validation for size & dimensions
 	if err := md.ValidateSize(); err != nil {
@@ -93,9 +125,17 @@ func NewMedia(f multipart.File, fh *multipart.FileHeader, entity, field string, 
 	dbo.Where("id=?", md.ID).Find(&md)
 
 	// Save bytes to disk (second)
-	err = md.DiskWrite(buf.Bytes())
+	path, err := md.DiskWrite(buf.Bytes(), false)
 	if err != nil {
 		return nil, err
+	}
+
+	// Upload to S3
+	uploadToS3 := fig.BoolOr(false, "media.s3.upload")
+	if uploadToS3 {
+		if err = UploadToS3(buf.Bytes(), path, md.Mime, fsize); err != nil {
+			return nil, err
+		}
 	}
 
 	return &md, nil
@@ -106,8 +146,7 @@ func (f Media) BeforeCommit() error {
 }
 
 // ValidateSize checks the file size and file dimensions
-// of the given media (if it is an image) against the
-// desired configuration values provided.
+// of the given media against the desired configuration values provided.
 // Allowed configurations include:
 //    media.validations.max-kb (10*1024 = 10MB default)
 //    media.validations.product.max-kb
@@ -143,6 +182,8 @@ func (f Media) ValidateSize() error {
 		h := fig.IntOr(0, prefix, f.Entity, f.Field, "exact-h")
 		minW := fig.IntOr(0, prefix, f.Entity, f.Field, "min-w")
 		minH := fig.IntOr(0, prefix, f.Entity, f.Field, "min-h")
+		maxW := fig.IntOr(0, prefix, f.Entity, f.Field, "max-w")
+		maxH := fig.IntOr(0, prefix, f.Entity, f.Field, "max-h")
 
 		// exact dimension checks
 		if w != 0 && w != *f.Width {
@@ -159,6 +200,14 @@ func (f Media) ValidateSize() error {
 		if minH != 0 && *f.Height < minH {
 			return fmt.Errorf("min height %d, found %d in %s", minH, *f.Height, f.Name)
 		}
+
+		// max dimension checks
+		if maxW != 0 && *f.Width > maxW {
+			return fmt.Errorf("max width %d, found %d in %s", maxW, *f.Width, f.Name)
+		}
+		if maxH != 0 && *f.Height > maxH {
+			return fmt.Errorf("max height %d, found %d in %s", minH, *f.Height, f.Name)
+		}
 	}
 
 	// all good
@@ -167,35 +216,49 @@ func (f Media) ValidateSize() error {
 
 // DiskWrite writes the content of file passed as input
 // parameter to the correct folder on disk.
-func (f Media) DiskWrite(raw []byte) error {
+// If the flag temp is set, the file gets written in to a temp directory.
+func (f Media) DiskWrite(raw []byte, temp bool) (string, error) {
 
 	// path at which the files are found
 	directory := fig.StringOr("./media", "media.folder")
 	if !strings.HasSuffix(directory, "/") {
 		directory += "/"
 	}
+	if temp {
+		tempFile, err := ioutil.TempFile("", "video")
+		if err != nil {
+			return "", nil
+		}
+
+		if _, err := tempFile.Write(raw); err != nil {
+			return "", err
+		}
+
+		return tempFile.Name(), nil
+	}
+
 	directory += f.Folder()
 
 	// create nested folders
 	err := os.MkdirAll(directory, 0755)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	// touch file on disk
 	path := fmt.Sprintf("%s/%s", directory, f.Name)
 	out, err := os.Create(path)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	// write content to file on disk
 	_, err = io.Copy(out, bytes.NewReader(raw))
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	return nil
+	return path, nil
 }
 
 // Folder retrieves the path at which the file is
@@ -229,8 +292,10 @@ func (f Media) File() File {
 	}
 
 	return File{
-		Ref:  ref,
-		Src:  f.URL(),
-		Mime: f.Mime,
+		Ref:    ref,
+		Src:    f.URL(),
+		Mime:   f.Mime,
+		Width:  f.Width,
+		Height: f.Height,
 	}
 }
