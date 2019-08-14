@@ -247,6 +247,7 @@ func initStaticBehaviors() {
                 SET NEW.stated_at = NOW(4);
             END IF;
 		END`,
+
 		`CREATE TRIGGER <<Table>>_stateful_bfr_update BEFORE UPDATE ON <<Table>> FOR EACH ROW
 		BEGIN
 			DECLARE deft   VARCHAR(128);
@@ -271,7 +272,7 @@ func initStaticBehaviors() {
 				SET tmpn = JSON_ARRAY(CAST(NEW.machine_state AS CHAR));
 				
 				# state machine must be defined
-				ELSEIF fnd = 0 THEN
+				IF fnd = 0 THEN
 					SIGNAL SQLSTATE '45000'
 					SET MESSAGE_TEXT = 'State machine definition is missing';
 				ELSE
@@ -300,8 +301,7 @@ func initStaticBehaviors() {
 				#ELSE old-state == new-state, so do nuthin
 				END IF;
 
-			ELSE
-						
+			ELSE		
 			    IF NOT OLD.machine_state IS NULL THEN
 					SIGNAL SQLSTATE '45000'
 					SET MESSAGE_TEXT = 'UPDATE cannot set machine_state to NULL';
