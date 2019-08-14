@@ -40,7 +40,7 @@ type StateMachine struct {
 	Entity string `sql:"TYPE:varchar(96);not null" json:"entity" insert:"must" update:"no"`
 
 	// To support multiple state machines for an entity
-	Kind *string `sql:"TYPE:varchar(96);not null" json:"kind" unique:"uniq_entity_kind(entity,kind)"`
+	Kind *string `sql:"TYPE:varchar(96)" json:"kind" unique:"uniq_entity_kind(entity,kind)"`
 
 	// All possible states
 	States *JArrStr `sql:"TYPE:json" json:"states" insert:"must"`
