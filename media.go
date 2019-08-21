@@ -2,6 +2,7 @@ package dorm
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"image"
 	_ "image/gif" // necessary image formats
@@ -17,7 +18,8 @@ import (
 	"strings"
 
 	"github.com/rightjoin/fig"
-	"gocv.io/x/gocv"
+	"gitlab.fg.net/tcommerce/backend/svc/sutl"
+	"gopkg.in/resty.v1"
 )
 
 type Media struct {
@@ -90,25 +92,32 @@ func NewMedia(f multipart.File, fh *multipart.FileHeader, entity, field string, 
 			return nil, err
 		}
 
-		v, err := gocv.VideoCaptureFile(path)
+		resp := make(map[string]interface{})
+
+		client := resty.New().R()
+		client.SetQueryParams(map[string]string{
+			"path": path,
+		})
+
+		endPoint, err := sutl.GetURL("video", "frame-params")
 		if err != nil {
-			fmt.Println(err)
+			return nil, err
 		}
-		defer v.Close()
 
-		if v.IsOpened() {
-			height := v.Get(gocv.VideoCaptureFrameHeight)
-			width := v.Get(gocv.VideoCaptureFrameWidth)
-
-			// remove the temp file
-			os.Remove(path)
-
-			intW := int(width)
-			intH := int(height)
-
-			md.Width = &intW
-			md.Height = &intH
+		res, err := client.SetResult(&resp).Get(endPoint)
+		if err != nil {
+			return nil, err
 		}
+
+		if res.RawResponse.StatusCode > 400 {
+			return nil, errors.New(res.RawResponse.Status)
+		}
+
+		intH := int(resp["height"].(float64))
+		intW := int(resp["width"].(float64))
+
+		md.Height = &intH
+		md.Width = &intW
 	}
 
 	// Validation for size & dimensions
