@@ -93,7 +93,10 @@ func initStaticBehaviors() {
 			DECLARE tmp    VARCHAR(128);
 
 			# fetch state machine
-			SELECT default_state, entry_states, states, count(1) INTO deft, entr, sts, fnd FROM state_machine WHERE entity = '<<Table>>'; 	
+			SELECT default_state, entry_states, states INTO deft, entr, sts FROM state_machine WHERE entity = '<<Table>>'; 
+			
+			# fetch counts
+			SELECT count(1) INTO fnd FROM state_machine WHERE entity = '<<Table>>'; 
 
 			SET tmpe = CAST(entr AS CHAR);
 			SET tmps = CAST(sts AS CHAR);
@@ -139,7 +142,10 @@ func initStaticBehaviors() {
 			# is a new state being set
 			IF NOT NEW.machine_state IS NULL THEN 
 			
-				SELECT default_state, entry_states, states, transitions, count(1) INTO deft, entr, sts, trns, fnd FROM state_machine WHERE entity = '<<Table>>';
+				SELECT default_state, entry_states, states, transitions INTO deft, entr, sts, trns FROM state_machine WHERE entity = '<<Table>>';
+
+				# fetch counts
+				SELECT count(1) INTO fnd FROM state_machine WHERE entity = '<<Table>>'; 
 
 				SET tmpe = CAST(entr AS CHAR);
 				SET tmps = CAST(sts AS CHAR);
@@ -217,7 +223,10 @@ func initStaticBehaviors() {
 			DECLARE tmp    VARCHAR(128);
 
 			# fetch state machine
-			SELECT default_state, entry_states, states, count(1) INTO deft, entr, sts, fnd FROM state_machine WHERE entity = '<<Table>>'; 	
+			SELECT default_state, entry_states, states INTO deft, entr, sts FROM state_machine WHERE entity = '<<Table>>'; 
+			
+			# fetch counts
+			SELECT count(1) INTO fnd FROM state_machine WHERE entity = '<<Table>>'; 
 
 			SET tmpe = CAST(entr AS CHAR);
 			SET tmps = CAST(sts AS CHAR);
@@ -264,7 +273,10 @@ func initStaticBehaviors() {
 			# is a new state being set
 			IF NOT NEW.machine_state IS NULL THEN 
 			
-				SELECT default_state, entry_states, states, transitions, count(1) INTO deft, entr, sts, trns, fnd FROM state_machine WHERE entity = '<<Table>>';
+				SELECT default_state, entry_states, states, transitions INTO deft, entr, sts, trns FROM state_machine WHERE entity = '<<Table>>';
+
+				# fetch counts
+				SELECT count(1) INTO fnd FROM state_machine WHERE entity = '<<Table>>'; 
 
 				SET tmpe = CAST(entr AS CHAR);
 				SET tmps = CAST(sts AS CHAR);
