@@ -73,7 +73,7 @@ func loadAttributes() {
 
 			// Set mandatory flag against the attribute
 			if a.Mandatory > 0 {
-				mandatoryAttr[a.Code] = true
+				mandatoryAttr[indexKey(a.Entity, a.Code)] = true
 			}
 		}
 	}
@@ -175,7 +175,16 @@ func AttributeValidate(modl interface{}, data map[string]string) (bool, error) {
 
 			// Validate the presence of mandatory attr
 			for key := range mandatoryAttr {
-				if _, ok := collated[key]; !ok {
+
+				// need to check for mandatory attributes of certain kind
+				// i.e. article or article_parent
+				entity := strings.Split(key, "___")[0]
+				code := strings.Split(key, "___")[1]
+				if entity != table {
+					continue
+				}
+
+				if _, ok := collated[code]; !ok {
 					return false, fmt.Errorf("Mandatory attribute %s missing", key)
 				}
 
