@@ -7,6 +7,7 @@ import (
 	"strings"
 	"sync"
 
+	"bitbucket.org/rightjoin/dorm"
 	"bitbucket.org/rightjoin/ion/db/orm"
 	"github.com/rightjoin/rutl/conv"
 	"github.com/rightjoin/rutl/refl"
@@ -58,7 +59,7 @@ func loadAttributes() {
 
 	attrMutex.Lock()
 	{
-		dbo := orm.Get(true)
+		dbo := dorm.GetORM(true)
 		var attrs []AttributeEntity
 		if err := dbo.Find(&attrs).Error; err != nil {
 			panic(err)
