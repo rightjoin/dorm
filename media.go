@@ -17,7 +17,6 @@ import (
 	"strings"
 
 	"github.com/rightjoin/fig"
-	"gocv.io/x/gocv"
 )
 
 type Media struct {
@@ -78,36 +77,6 @@ func NewMedia(f multipart.File, fh *multipart.FileHeader, entity, field string, 
 		if err == nil {
 			md.Width = &img.Width
 			md.Height = &img.Height
-		}
-	}
-
-	// Frames' properties (if it is a video)
-	if strings.HasPrefix(md.Mime, "video/") {
-
-		// Write the content into a temp directory
-		path, err := md.DiskWrite(buf.Bytes(), true)
-		if err != nil {
-			return nil, err
-		}
-
-		v, err := gocv.VideoCaptureFile(path)
-		if err != nil {
-			fmt.Println(err)
-		}
-		defer v.Close()
-
-		if v.IsOpened() {
-			height := v.Get(gocv.VideoCaptureFrameHeight)
-			width := v.Get(gocv.VideoCaptureFrameWidth)
-
-			// remove the temp file
-			os.Remove(path)
-
-			intW := int(width)
-			intH := int(height)
-
-			md.Width = &intW
-			md.Height = &intH
 		}
 	}
 
