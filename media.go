@@ -2,7 +2,6 @@ package dorm
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"image"
 	_ "image/gif" // necessary image formats
@@ -18,7 +17,6 @@ import (
 	"strings"
 
 	"github.com/rightjoin/fig"
-	"gopkg.in/resty.v1"
 )
 
 type Media struct {
@@ -80,46 +78,6 @@ func NewMedia(f multipart.File, fh *multipart.FileHeader, entity, field string, 
 			md.Width = &img.Width
 			md.Height = &img.Height
 		}
-	}
-
-	// Frames' properties (if it is a video)
-	if strings.HasPrefix(md.Mime, "video/") {
-
-		// Write the content into a temp directory
-		path, err := md.DiskWrite(buf.Bytes(), true)
-		if err != nil {
-			return nil, err
-		}
-
-		resp := make(map[string]interface{})
-
-		client := resty.New().R()
-		client.SetQueryParams(map[string]string{
-			"path": path,
-		})
-
-		host := fig.String("svc.video.host")
-		host = strings.Trim(host, "/")
-
-		endPoint := fig.String("svc.video.api.frame-params")
-		endPoint = strings.Trim(endPoint, "/")
-
-		url := fmt.Sprintf("%s/%s", host, endPoint)
-
-		res, err := client.SetResult(&resp).Get(url)
-		if err != nil {
-			return nil, err
-		}
-
-		if res.RawResponse.StatusCode > 400 {
-			return nil, errors.New(res.RawResponse.Status)
-		}
-
-		intH := int(resp["height"].(float64))
-		intW := int(resp["width"].(float64))
-
-		md.Height = &intH
-		md.Width = &intW
 	}
 
 	// Validation for size & dimensions
