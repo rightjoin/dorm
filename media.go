@@ -18,7 +18,6 @@ import (
 	"strings"
 
 	"github.com/rightjoin/fig"
-	"gitlab.fg.net/tcommerce/backend/svc/sutl"
 	"gopkg.in/resty.v1"
 )
 
@@ -99,12 +98,15 @@ func NewMedia(f multipart.File, fh *multipart.FileHeader, entity, field string, 
 			"path": path,
 		})
 
-		endPoint, err := sutl.GetURL("video", "frame-params")
-		if err != nil {
-			return nil, err
-		}
+		host := fig.String("svc.video.host")
+		host = strings.Trim(host, "/")
 
-		res, err := client.SetResult(&resp).Get(endPoint)
+		endPoint := fig.String("svc.video.api.frame-params")
+		endPoint = strings.Trim(endPoint, "/")
+
+		url := fmt.Sprintf("%s/%s", host, endPoint)
+
+		res, err := client.SetResult(&resp).Get(url)
 		if err != nil {
 			return nil, err
 		}
