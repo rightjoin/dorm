@@ -7,8 +7,7 @@ import (
 	"strings"
 	"sync"
 
-	"bitbucket.org/rightjoin/dorm"
-	"bitbucket.org/rightjoin/ion/db/orm"
+	"github.com/rightjoin/dorm"
 	"github.com/rightjoin/rutl/conv"
 	"github.com/rightjoin/rutl/refl"
 )
