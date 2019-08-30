@@ -7,7 +7,6 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/rightjoin/dorm"
 	"github.com/rightjoin/rutl/conv"
 	"github.com/rightjoin/rutl/refl"
 )
