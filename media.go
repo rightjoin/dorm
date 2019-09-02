@@ -99,6 +99,12 @@ func NewMedia(f multipart.File, fh *multipart.FileHeader, entity, field string, 
 		return nil, err
 	}
 
+	// Clean the path: "/db/model/...."
+	// e.g.: "catalog/article/...."
+	if strings.Contains(path, "/media/") {
+		path = path[strings.Index(path, "/media/")+7:]
+	}
+	
 	// Upload to S3
 	uploadToS3 := fig.BoolOr(false, "media.s3.upload")
 	if uploadToS3 {
