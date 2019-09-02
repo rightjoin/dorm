@@ -57,7 +57,7 @@ func loadAttributes() {
 
 	attrMutex.Lock()
 	{
-		dbo := dorm.GetORM(true)
+		dbo := GetORM(true)
 		var attrs []AttributeEntity
 		if err := dbo.Find(&attrs).Error; err != nil {
 			panic(err)
@@ -218,7 +218,7 @@ func AttributeInsertViaEntity(post map[string]string, entity string, field strin
 	post["field"] = field
 
 	// store in db
-	dbo := orm.Get(true)
+	dbo := GetORM(true)
 	err = InsertSelect(dbo, &att, post)
 	if err != nil {
 		return nil, err
@@ -232,7 +232,7 @@ func AttributeUpdateViaEntity(post map[string]string, id string) (*AttributeEnti
 	var err error
 
 	// store in db
-	dbo := orm.Get(true)
+	dbo := GetORM(true)
 	err = UpdateSelect(dbo, "id", id, &att, post)
 	if err != nil {
 		return nil, err
