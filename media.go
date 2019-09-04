@@ -8,7 +8,6 @@ import (
 	_ "image/jpeg"
 	_ "image/png"
 	"io"
-	"io/ioutil"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -18,6 +17,8 @@ import (
 
 	"github.com/rightjoin/fig"
 )
+
+var directory = fig.StringOr("./media", "media.folder")
 
 type Media struct {
 	PKey
@@ -94,21 +95,18 @@ func NewMedia(f multipart.File, fh *multipart.FileHeader, entity, field string, 
 	dbo.Where("id=?", md.ID).Find(&md)
 
 	// Save bytes to disk (second)
-	path, err := md.DiskWrite(buf.Bytes(), false)
+	path, err := md.DiskWrite(buf.Bytes())
 	if err != nil {
 		return nil, err
 	}
 
-	// Clean the path: "/db/model/...."
-	// e.g.: "catalog/article/...."
-	if strings.Contains(path, "/media/") {
-		path = path[strings.Index(path, "/media/")+7:]
-	}
-	
+	// For S3 upload we only need folder-prefix/<model-name>/.... as path
+	s3Path := path[strings.Index(path, directory)+len(directory):]
+
 	// Upload to S3
 	uploadToS3 := fig.BoolOr(false, "media.s3.upload")
 	if uploadToS3 {
-		if err = UploadToS3(buf.Bytes(), path, md.Mime, fsize); err != nil {
+		if err = UploadToS3(buf.Bytes(), s3Path, md.Mime, fsize); err != nil {
 			return nil, err
 		}
 	}
@@ -191,27 +189,13 @@ func (f Media) ValidateSize() error {
 
 // DiskWrite writes the content of file passed as input
 // parameter to the correct folder on disk.
-// If the flag temp is set, the file gets written in to a temp directory.
-func (f Media) DiskWrite(raw []byte, temp bool) (string, error) {
+func (f Media) DiskWrite(raw []byte) (string, error) {
 
 	// path at which the files are found
 	directory := fig.StringOr("./media", "media.folder")
 	if !strings.HasSuffix(directory, "/") {
 		directory += "/"
 	}
-	if temp {
-		tempFile, err := ioutil.TempFile("", "video")
-		if err != nil {
-			return "", nil
-		}
-
-		if _, err := tempFile.Write(raw); err != nil {
-			return "", err
-		}
-
-		return tempFile.Name(), nil
-	}
-
 	directory += f.Folder()
 
 	// create nested folders
