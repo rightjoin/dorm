@@ -123,6 +123,8 @@ func CreateDatabase(name string) {
 
 	// function: url cleanup
 	err = schema.Exec(`CREATE FUNCTION geturl( str VARCHAR(256) ) RETURNS VARCHAR(256)
+	DETERMINISTIC
+	READS SQL DATA
 	BEGIN
 		DECLARE i, len SMALLINT DEFAULT 1;
 		DECLARE ret VARCHAR(256) DEFAULT '';
@@ -158,6 +160,8 @@ func CreateDatabase(name string) {
 
 	// function: random string generator
 	err = schema.Exec(`CREATE FUNCTION randstr (length SMALLINT(3)) RETURNS varchar(100)
+	DETERMINISTIC
+	READS SQL DATA
 	BEGIN
 		SET @returnStr = '';
 		SET @allowedChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
