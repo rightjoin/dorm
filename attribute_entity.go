@@ -169,6 +169,11 @@ func AttributeValidate(modl interface{}, data map[string]string) (bool, error) {
 
 		}
 
+		// Check for availability of mandatory fields
+		if len(collated) == 0 && len(mandatoryAttr) > 0 {
+			return false, fmt.Errorf("Mandatory attributes missing %+v", mandatoryAttr)
+		}
+
 		// merge all collated items into a single value
 		if len(collated) > 0 {
 
