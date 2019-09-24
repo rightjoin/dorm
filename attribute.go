@@ -37,7 +37,7 @@ func (a Attribute) Accepts(inp string) (interface{}, error) {
 		found := false
 		for i := range *a.Enums {
 			item := (*a.Enums)[i]
-			if fmt.Sprint(item) == val {
+			if fmt.Sprint(item) == fmt.Sprint(val) {
 				found = true
 				break
 			}
