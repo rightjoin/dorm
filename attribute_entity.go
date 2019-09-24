@@ -51,10 +51,6 @@ var attrMutex sync.Mutex
 // attrMap should destroy itself in every 5 min, so that
 // any latest changes can go live in 5 min
 func loadAttributes() {
-	if attrMap != nil {
-		return
-	}
-
 	attrMutex.Lock()
 	{
 		dbo := GetORM(true)
@@ -171,7 +167,12 @@ func AttributeValidate(modl interface{}, data map[string]string) (bool, error) {
 
 		// Check for availability of mandatory fields
 		if len(collated) == 0 && len(mandatoryAttr) > 0 {
-			return false, fmt.Errorf("Mandatory attributes missing %+v", mandatoryAttr)
+			for key := range mandatoryAttr {
+				if table == strings.Split(key, "___")[0] {
+					return false, fmt.Errorf("Mandatory attributes missing %+v", mandatoryAttr)
+				}
+			}
+
 		}
 
 		// merge all collated items into a single value
