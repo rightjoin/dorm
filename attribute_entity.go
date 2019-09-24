@@ -55,7 +55,7 @@ func loadAttributes() {
 	{
 		dbo := GetORM(true)
 		var attrs []AttributeEntity
-		if err := dbo.Find(&attrs).Error; err != nil {
+		if err := dbo.Where("deleted = 0").Find(&attrs).Error; err != nil {
 			panic(err)
 		}
 
