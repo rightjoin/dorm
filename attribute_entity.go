@@ -55,7 +55,7 @@ func loadAttributes() {
 	{
 		dbo := GetORM(true)
 		var attrs []AttributeEntity
-		if err := dbo.Where("deleted = 0").Find(&attrs).Error; err != nil {
+		if err := dbo.Find(&attrs).Error; err != nil {
 			panic(err)
 		}
 
@@ -106,6 +106,10 @@ func AttributeValidate(modl interface{}, data map[string]string) (bool, error) {
 		return item, nil
 	}
 
+	// We need to collage/merge keys of certain types under a
+	// single json like field, So loop through an aggregate them all
+	collated := make(map[string]interface{})
+
 	// Iterate over each of the fields of the struct represented by model,
 	// and check if needs validation
 	for _, fld := range refl.NestedFields(modl) {
@@ -120,10 +124,6 @@ func AttributeValidate(modl interface{}, data map[string]string) (bool, error) {
 
 		// TODO:
 		// for what field types should this be done? info/map/what else?
-
-		// We need to collage/merge keys of certain types under a
-		// single json like field, So loop through an aggregate them all
-		collated := make(map[string]interface{})
 
 		// Handles cases where the input is already a json
 		if sql == "info" {
@@ -144,70 +144,72 @@ func AttributeValidate(modl interface{}, data map[string]string) (bool, error) {
 				}
 			}
 		}
+	}
 
-		// collates form data or data in the format of "someObj.someKey"
-		for key, val := range data {
+	prefix := "info."
 
-			// Handles all the cases where the input is in the form of "info.key",
-			// i.e. if it's a form data, would fail incase of json/application
-			if strings.HasPrefix(key, sql+".") {
+	// collates form data or data in the format of "someObj.someKey"
+	for key, val := range data {
 
-				code := strings.Replace(key, sql+".", "", -1)
+		// Handles all the cases where the input is in the form of "info.key",
+		// i.e. if it's a form data, would fail incase of json/application
+		if strings.HasPrefix(key, prefix) {
 
-				item, err := validateReturnItem(code, val, sql)
-				if err != nil {
-					return false, err
-				}
+			code := strings.Replace(key, prefix, "", -1)
 
-				// all good, so lets collate "property" part of info.property
-				collated[code] = item
-			}
-
-		}
-
-		// Check for availability of mandatory fields
-		if len(collated) == 0 && len(mandatoryAttr) > 0 {
-			for key := range mandatoryAttr {
-				if table == strings.Split(key, "___")[0] {
-					return false, fmt.Errorf("Mandatory attributes missing %+v", mandatoryAttr)
-				}
-			}
-
-		}
-
-		// merge all collated items into a single value
-		if len(collated) > 0 {
-
-			// Validate the presence of mandatory attr
-			for key := range mandatoryAttr {
-
-				// need to check for mandatory attributes of certain kind
-				// i.e. article or article_parent
-				entity := strings.Split(key, "___")[0]
-				code := strings.Split(key, "___")[1]
-				if entity != table {
-					continue
-				}
-
-				if _, ok := collated[code]; !ok {
-					return false, fmt.Errorf("Mandatory attribute %s missing", key)
-				}
-
-			}
-
-			b, err := json.Marshal(collated)
+			item, err := validateReturnItem(code, val, "info")
 			if err != nil {
-				return false, errors.New("could not encode to json")
+				return false, err
 			}
 
-			// set the condensed field in the input map
-			data[sql] = string(b)
+			// all good, so lets collate "property" part of info.property
+			collated[code] = item
+		}
 
-			// unset all the fields that were collated
-			for key := range data {
-				if strings.HasPrefix(key, sql+".") {
-					delete(data, key)
-				}
+	}
+
+	// Check for availability of mandatory fields
+	if len(collated) == 0 && len(mandatoryAttr) > 0 {
+		for key := range mandatoryAttr {
+			if table == strings.Split(key, "___")[0] {
+				return false, fmt.Errorf("mandatory attribute_entity missing %s", strings.Split(key, "___")[1])
+			}
+		}
+
+	}
+
+	// merge all collated items into a single value
+	if len(collated) > 0 {
+
+		// Validate the presence of mandatory attr
+		for key := range mandatoryAttr {
+
+			// need to check for mandatory attributes of certain kind
+			// i.e. article or article_parent
+			entity := strings.Split(key, "___")[0]
+			code := strings.Split(key, "___")[1]
+			if entity != table {
+				continue
+			}
+
+			if _, ok := collated[code]; !ok {
+				return false, fmt.Errorf("mandatory attribute_entity %s missing", code)
+			}
+
+		}
+
+		b, err := json.Marshal(collated)
+		if err != nil {
+			return false, errors.New("could not encode to json")
+		}
+
+		// set the condensed field in the input map
+		data["info"] = string(b)
+
+		// unset all the fields that were collated
+		for key := range data {
+			if strings.HasPrefix(key, prefix) {
+				delete(data, key)
 			}
 		}
 	}
@@ -222,6 +224,26 @@ func AttributeInsertViaEntity(post map[string]string, entity string, field strin
 
 	post["entity"] = entity
 	post["field"] = field
+
+	if units, ok := post["units"]; ok {
+		parsedArr := []string{}
+		err := json.Unmarshal([]byte(units), &parsedArr)
+		if err == nil {
+			if len(parsedArr) == 0 {
+				delete(post, "units")
+			}
+		}
+	}
+
+	if enums, ok := post["enums"]; ok {
+		parsedArr := []string{}
+		err := json.Unmarshal([]byte(enums), &parsedArr)
+		if err == nil {
+			if len(parsedArr) == 0 {
+				delete(post, "enums")
+			}
+		}
+	}
 
 	// store in db
 	dbo := GetORM(true)
