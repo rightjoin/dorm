@@ -225,6 +225,26 @@ func AttributeInsertViaEntity(post map[string]string, entity string, field strin
 	post["entity"] = entity
 	post["field"] = field
 
+	if units, ok := post["units"]; ok {
+		parsedArr := []string{}
+		err := json.Unmarshal([]byte(units), &parsedArr)
+		if err == nil {
+			if len(parsedArr) == 0 {
+				delete(post, "units")
+			}
+		}
+	}
+
+	if enums, ok := post["enums"]; ok {
+		parsedArr := []string{}
+		err := json.Unmarshal([]byte(enums), &parsedArr)
+		if err == nil {
+			if len(parsedArr) == 0 {
+				delete(post, "enums")
+			}
+		}
+	}
+
 	// store in db
 	dbo := GetORM(true)
 	err = InsertSelect(dbo, &att, post)
