@@ -86,7 +86,7 @@ func UpdateSelect(dbo *gorm.DB, pkField string, pkValue interface{}, addr interf
 	}
 
 	// execute updation
-	err := doUpdation(dbo, pkField, pkValue, addr, input, true)
+	err := doUpdation(txn, pkField, pkValue, addr, input, true)
 	if err != nil {
 		txn.Rollback()
 		return err
@@ -113,7 +113,7 @@ func Update(dbo *gorm.DB, pkField string, pkValue interface{}, addr interface{},
 	}
 
 	// execute updation
-	err := doUpdation(dbo, pkField, pkValue, addr, input, false)
+	err := doUpdation(txn, pkField, pkValue, addr, input, false)
 	if err != nil {
 		txn.Rollback()
 		return err
