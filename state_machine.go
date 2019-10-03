@@ -173,7 +173,7 @@ func (j *Movements) Scan(value interface{}) error {
 type StateLog struct {
 	PKey
 	Entity   string  `sql:"TYPE:varchar(64);not null;" json:"entity" insert:"must" update:"no"`
-	EntityID uint    `sql:"not null;" json:"entity_id" insert:"must" update:"no"`
+	EntityID uint    `sql:"not null;" json:"entity_id" insert:"must" update:"no" index:"entity_name_id(entity,entity_id)"`
 	OldState *string `sql:"TYPE:varchar(128)" json:"old_state"`
 	NewState *string `sql:"TYPE:varchar(128)" json:"new_state"`
 	Timed
@@ -185,7 +185,7 @@ type StateLog struct {
 type StateLog4 struct {
 	PKey
 	Entity   string  `sql:"TYPE:varchar(64);not null;" json:"entity" insert:"must" update:"no"`
-	EntityID uint    `sql:"not null;" json:"entity_id" insert:"must" update:"no"`
+	EntityID uint    `sql:"not null;" json:"entity_id" insert:"must" update:"no" index:"entity_name_id(entity,entity_id)"`
 	OldState *string `sql:"TYPE:varchar(128)" json:"old_state"`
 	NewState *string `sql:"TYPE:varchar(128)" json:"new_state"`
 	Timed4Lite
