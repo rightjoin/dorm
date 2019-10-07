@@ -187,7 +187,7 @@ func AttributeValidate(modl interface{}, data map[string]string, action string) 
 
 		// Validate the presence of mandatory attr
 		// only incase of an insert operation
-		if action != "update" {
+		if action == "insert" {
 			for key := range mandatoryAttr {
 
 				// need to check for mandatory attributes of certain kind
