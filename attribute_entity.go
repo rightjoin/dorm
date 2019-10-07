@@ -186,20 +186,23 @@ func AttributeValidate(modl interface{}, data map[string]string, action string) 
 	if len(collated) > 0 {
 
 		// Validate the presence of mandatory attr
-		for key := range mandatoryAttr {
+		// only incase of an insert operation
+		if action != "update" {
+			for key := range mandatoryAttr {
 
-			// need to check for mandatory attributes of certain kind
-			// i.e. article or article_parent
-			entity := strings.Split(key, "___")[0]
-			code := strings.Split(key, "___")[1]
-			if entity != table {
-				continue
+				// need to check for mandatory attributes of certain kind
+				// i.e. article or article_parent
+				entity := strings.Split(key, "___")[0]
+				code := strings.Split(key, "___")[1]
+				if entity != table {
+					continue
+				}
+
+				if _, ok := collated[code]; !ok {
+					return false, fmt.Errorf("mandatory attribute_entity %s missing", code)
+				}
+
 			}
-
-			if _, ok := collated[code]; !ok {
-				return false, fmt.Errorf("mandatory attribute_entity %s missing", code)
-			}
-
 		}
 
 		b, err := json.Marshal(collated)
