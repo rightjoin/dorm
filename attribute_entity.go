@@ -79,7 +79,11 @@ func indexKey(index ...string) string {
 	return strings.Join(index, "___")
 }
 
-func AttributeValidate(modl interface{}, data map[string]string) (bool, error) {
+func AttributeValidate(modl interface{}, data map[string]string, action string) (bool, error) {
+
+	if action != "insert" && action != "update" {
+		return false, errors.New("unknown action : " + action)
+	}
 
 	var table = Table(modl)
 
@@ -169,13 +173,13 @@ func AttributeValidate(modl interface{}, data map[string]string) (bool, error) {
 	}
 
 	// Check for availability of mandatory fields
-	if len(collated) == 0 && len(mandatoryAttr) > 0 {
+	// Note: for updates, we are ignoring the mandatory check
+	if len(collated) == 0 && len(mandatoryAttr) > 0 && action != "update" {
 		for key := range mandatoryAttr {
 			if table == strings.Split(key, "___")[0] {
 				return false, fmt.Errorf("mandatory attribute_entity missing %s", strings.Split(key, "___")[1])
 			}
 		}
-
 	}
 
 	// merge all collated items into a single value
