@@ -18,8 +18,6 @@ import (
 	"github.com/rightjoin/fig"
 )
 
-var directory = fig.StringOr("./media", "media.folder")
-
 type Media struct {
 	PKey
 	UID10
@@ -95,9 +93,16 @@ func NewMedia(f multipart.File, fh *multipart.FileHeader, entity, field string, 
 	dbo.Where("id=?", md.ID).Find(&md)
 
 	// Save bytes to disk (second)
-	path, err := md.DiskWrite(buf.Bytes())
-	if err != nil {
-		return nil, err
+
+	directory, path := md.getPath()
+
+	// If local download is enabled
+	localDownload := fig.BoolOr(true, "media.local-download")
+	if localDownload {
+		err := md.DiskWrite(buf.Bytes(), directory, path)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// For S3 upload we only need folder-prefix/<model-name>/.... as path
@@ -187,9 +192,10 @@ func (f Media) ValidateSize() error {
 	return nil
 }
 
-// DiskWrite writes the content of file passed as input
-// parameter to the correct folder on disk.
-func (f Media) DiskWrite(raw []byte) (string, error) {
+// getPath returns the directory as well as the complete file path
+// where media file is to be downloaded(incase of a local download)
+// or uploaded(incase of s3 upload).
+func (f Media) getPath() (string, string) {
 
 	// path at which the files are found
 	directory := fig.StringOr("./media", "media.folder")
@@ -198,26 +204,34 @@ func (f Media) DiskWrite(raw []byte) (string, error) {
 	}
 	directory += f.Folder()
 
+	path := fmt.Sprintf("%s/%s", directory, f.Name)
+
+	return directory, path
+}
+
+// DiskWrite writes the content of file passed as input
+// parameter to the correct folder on disk.
+func (f Media) DiskWrite(raw []byte, directory, path string) error {
+
 	// create nested folders
 	err := os.MkdirAll(directory, 0755)
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	// touch file on disk
-	path := fmt.Sprintf("%s/%s", directory, f.Name)
 	out, err := os.Create(path)
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	// write content to file on disk
 	_, err = io.Copy(out, bytes.NewReader(raw))
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	return path, nil
+	return nil
 }
 
 // Folder retrieves the path at which the file is
