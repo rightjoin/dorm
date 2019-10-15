@@ -18,7 +18,7 @@ type AttributeEntity struct {
 	Attribute
 
 	Entity string `sql:"TYPE:varchar(64);not null" json:"entity" insert:"must" update:"no"`
-	Field  string `sql:"TYPE:varchar(64);not null;DEFAULT:'info'" json:"field" update:"no" unique:"idx_uniq_key(entity,field,code,active)"`
+	Field  string `sql:"TYPE:varchar(64);not null;DEFAULT:'info'" json:"field" update:"no" unique:"idx_uniq_key(entity,field,code)"`
 
 	// Behaviours
 	// ToDo: Add SoftDelete
