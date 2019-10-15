@@ -97,7 +97,7 @@ func NewMedia(f multipart.File, fh *multipart.FileHeader, entity, field string, 
 	directory, path := md.getPath()
 
 	// If local download is enabled
-	localDownload := fig.BoolOr(true, "media.local-download")
+	localDownload := fig.BoolOr(true, "media.folder-write")
 	if localDownload {
 		err := md.DiskWrite(buf.Bytes(), directory, path)
 		if err != nil {
