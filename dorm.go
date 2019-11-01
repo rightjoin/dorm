@@ -711,8 +711,13 @@ func initDynamicBehaviors() {
 	}
 
 	// SEO
-	behaveModel[Seo{}] = func(model interface{}) []string {
-		s := Seo{}
+	behaveModel[SeoField{}] = func(model interface{}) []string {
+		s := SeoField{}
+
+		urlRefModel, colToQuery, colToFetch := s.GetURLRef(model)
+
+		urlColumn := s.UrlColumn(model)
+
 		return []string{
 			`CREATE TRIGGER <<Table>>_seo_bfr_update BEFORE UPDATE ON <<Table>> FOR EACH ROW
 			BEGIN
@@ -737,24 +742,37 @@ func initDynamicBehaviors() {
 					DECLARE tmp VARCHAR(256);
 					DECLARE count INT DEFAULT 0;
 					DECLARE found INT DEFAULT 0;
-		
-					IF NEW.url = '' THEN
-						SET tmp = geturl(NEW.%s);
-						SET NEW.url = CONCAT('%s/', tmp);
+					DECLARE urlRef VARCHAR(256);
+					
+					IF NEW.seo IS NULL THEN
+						SET urlRef = '%s';
+						IF urlRef <> 'DUAL' THEN
+							SELECT %s INTO tmp FROM %s WHERE %s = NEW.%s;
+						ELSE
+							SET tmp = geturl(New.%s); 
+						END IF;
+						SET NEW.seo = JSON_OBJECT("url", CONCAT('%s/', tmp));
 					END IF;
-					IF LEFT(NEW.url,1) <> '/' THEN
-						SET NEW.url = CONCAT('/', NEW.url);
+					
+					IF JSON_VALID(NEW.seo) > 0 THEN
+						SET tmp = JSON_UNQUOTE(JSON_EXTRACT(NEW.seo, '$.url'));
+						IF LEFT(tmp,1) <> '/' THEN
+							SET NEW.seo = JSON_OBJECT("url", CONCAT('/', tmp));
+						END IF;
 					END IF;
-		
-					SET found = (SELECT COUNT(*) FROM <<Table>> WHERE url = NEW.url);
+
+					SET tmp = JSON_UNQUOTE(JSON_EXTRACT(NEW.seo, '$.url'));
+
+					SET found = (SELECT COUNT(*) FROM <<Table>> WHERE JSON_EXTRACT(seo,'$.url') = tmp);
 					WHILE found > 0 DO
 						SET count = count + 1;
-						IF NOT EXISTS (SELECT * FROM <<Table>> WHERE url = CONCAT(NEW.url,count)) THEN
-							SET NEW.url = CONCAT(NEW.url,count);
+						IF NOT EXISTS (SELECT * FROM <<Table>> WHERE JSON_EXTRACT(seo,'$.url') = CONCAT(tmp,count)) THEN
+							SET tmp = CONCAT(tmp,count);
+							SET NEW.seo = JSON_OBJECT("url", tmp);
 							SET found = 0;
 						END IF;
 					END WHILE;
-				END`, s.UrlColumn(model), s.UrlPrefix(model)),
+				END`, urlRefModel, colToFetch, urlRefModel, colToQuery, urlColumn, urlColumn, s.UrlPrefix(model)),
 		}
 	}
 

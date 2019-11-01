@@ -2,6 +2,7 @@ package dorm
 
 import (
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/rightjoin/rutl/conv"
@@ -83,19 +84,23 @@ type DynamicField struct {
 type MyISAM struct {
 }
 
-type Seo struct {
-	URL          string `sql:"TYPE:varchar(256);not null;DEFAULT:''" json:"url" unique:"true"`
-	URLPast      *JArr  `sql:"TYPE:json;" json:"-" insert:"no" update:"no"`
-	MetaTitle    string `sql:"TYPE:varchar(256);not null;DEFAULT:''" json:"meta_title"`
-	MetaDesc     string `sql:"TYPE:varchar(256);not null;DEFAULT:''" json:"meta_desc"`
-	MetaKeywords string `sql:"TYPE:varchar(256);not null;DEFAULT:''" json:"meta_keywords"`
-	Sitemap      uint8  `sql:"TYPE:tinyint(1) unsigned;not null;DEFAULT:'1'" json:"sitemap"`
+type SeoField struct {
+	Seo *JDoc `sql:"TYPE:json" json:"seo"`
 }
+
+// type Seo struct {
+// 	URL          string `sql:"TYPE:varchar(256);not null;DEFAULT:''" json:"url" unique:"true"`
+// 	URLPast      *JArr  `sql:"TYPE:json;" json:"-" insert:"no" update:"no"`
+// 	MetaTitle    string `sql:"TYPE:varchar(256);not null;DEFAULT:''" json:"meta_title"`
+// 	MetaDesc     string `sql:"TYPE:varchar(256);not null;DEFAULT:''" json:"meta_desc"`
+// 	MetaKeywords string `sql:"TYPE:varchar(256);not null;DEFAULT:''" json:"meta_keywords"`
+// 	Sitemap      uint8  `sql:"TYPE:tinyint(1) unsigned;not null;DEFAULT:'1'" json:"sitemap"`
+// }
 
 // UrlColumn gives you the column/field to be used to supply text
 // that will form the URL. Typically (and default) is to use a field named
 // "name" for population of url_web
-func (s Seo) UrlColumn(addr interface{}) string {
+func (s SeoField) UrlColumn(addr interface{}) string {
 	t := reflect.TypeOf(addr)
 	t = t.Elem()
 	sf, found := t.FieldByName("Seo")
@@ -109,9 +114,38 @@ func (s Seo) UrlColumn(addr interface{}) string {
 	return "name"
 }
 
+// GetURLRef will return the fields that will be required in cases where
+// the url_column is not directly present in the current model.
+func (s SeoField) GetURLRef(addr interface{}) (string, string, string) {
+	t := reflect.TypeOf(addr)
+	t = t.Elem()
+	sf, found := t.FieldByName("Seo")
+	if !found {
+		panic("Seo field not found in model")
+	}
+
+	var refModel, refCol, refVal string
+
+	refs, ok := sf.Tag.Lookup("url_column_ref")
+	if !ok {
+		return "", "", ""
+	}
+
+	cols := strings.Split(refs, ",")
+	if len(cols) < 3 {
+		panic("provide three set of value incase of url_column_ref")
+	}
+
+	refModel = cols[0]
+	refCol = cols[1]
+	refVal = cols[2]
+
+	return refModel, refCol, refVal
+}
+
 // UrlPrefix gives you the prefix that should be used in the URLs.
 // Default is to use "table-name"
-func (s Seo) UrlPrefix(addr interface{}) string {
+func (s SeoField) UrlPrefix(addr interface{}) string {
 	t := reflect.TypeOf(addr)
 	t = t.Elem()
 	sf, found := t.FieldByName("Seo")
