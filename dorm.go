@@ -721,19 +721,32 @@ func initDynamicBehaviors() {
 		return []string{
 			`CREATE TRIGGER <<Table>>_seo_bfr_update BEFORE UPDATE ON <<Table>> FOR EACH ROW
 			BEGIN
-				IF NEW.url = '' THEN
+				DECLARE tmp VARCHAR(256);
+				DECLARE oldUrl VARCHAR(256);
+				DECLARE arr JSON;
+				
+				IF NEW.seo IS NULL THEN
 					SIGNAL SQLSTATE '45000'
-					SET MESSAGE_TEXT = '<<Table>>.Url cannot be updated to EMPTY';
+					SET MESSAGE_TEXT = '<<Table>>.Seo cannot be updated to EMPTY';
 				END IF;
-				IF LEFT(NEW.url,1) <> '/' THEN
-					SET NEW.url = CONCAT('/', NEW.url);
+
+				SET tmp = JSON_UNQUOTE(JSON_EXTRACT(NEW.seo,'$.url'));
+				IF LEFT(tmp,1) <> '/' THEN
+					SET tmp = CONCAT('/', tmp);
+					SET NEW.seo = JSON_SET(NEW.seo,"$.url",tmp);
 				END IF;
-				IF (OLD.url <> '') AND (NEW.url <> OLD.url) THEN
-					IF NEW.url_past IS NULL THEN
-						SET NEW.url_past = JSON_ARRAY();
+				
+				SET oldUrl = JSON_UNQUOTE(JSON_EXTRACT(OLD.seo,'$.url'));
+				IF (oldUrl <> '' OR oldUrl IS NOT NULL) AND (oldUrl <> tmp) THEN
+					SET arr = JSON_EXTRACT(NEW.seo,'$.url_past');
+					IF arr IS NULL THEN
+						SET arr = JSON_ARRAY();
+						SET NEW.seo = JSON_MERGE_PRESERVE(NEW.seo,JSON_OBJECT("url_past",arr));
 					END IF;
-					IF JSON_CONTAINS(NEW.url_past, JSON_ARRAY(OLD.url)) = 0 THEN
-						SET NEW.url_past = JSON_ARRAY_APPEND(NEW.url_past, "$", OLD.url);
+					
+					IF JSON_CONTAINS(arr,JSON_ARRAY(oldUrl)) = 0 THEN
+						SET arr = JSON_ARRAY_APPEND(arr,"$",oldUrl);
+						SET NEW.seo = JSON_SET(NEW.seo,"$.url_past",arr);
 					END IF;
 				END IF;
 			END`,
