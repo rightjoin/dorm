@@ -711,24 +711,49 @@ func initDynamicBehaviors() {
 	}
 
 	// SEO
-	behaveModel[Seo{}] = func(model interface{}) []string {
-		s := Seo{}
+	behaveModel[SeoField{}] = func(model interface{}) []string {
+		s := SeoField{}
+
+		urlRefModel, colToQuery, colToFetch := s.GetURLRef(model)
+
+		urlColumn := s.UrlColumn(model)
+
 		return []string{
 			`CREATE TRIGGER <<Table>>_seo_bfr_update BEFORE UPDATE ON <<Table>> FOR EACH ROW
 			BEGIN
+				DECLARE tmp VARCHAR(256);
+				DECLARE arr JSON;
+			
+				IF NEW.seo IS NOT NULL THEN
+					SET arr = JSON_EXTRACT(OLD.seo,'$.url_past');
+					IF arr IS NULL THEN 
+						SET arr = JSON_ARRAY();
+					END IF;
+					SET NEW.seo = JSON_SET(NEW.seo,"$.url_past",arr);
+				END IF;
+
 				IF NEW.url = '' THEN
 					SIGNAL SQLSTATE '45000'
-					SET MESSAGE_TEXT = '<<Table>>.Url cannot be updated to EMPTY';
+					SET MESSAGE_TEXT = 'portal_article.URL cannot be updated to EMPTY';
 				END IF;
+
 				IF LEFT(NEW.url,1) <> '/' THEN
 					SET NEW.url = CONCAT('/', NEW.url);
 				END IF;
+
 				IF (OLD.url <> '') AND (NEW.url <> OLD.url) THEN
-					IF NEW.url_past IS NULL THEN
-						SET NEW.url_past = JSON_ARRAY();
+					IF NEW.seo IS NULL THEN
+						SET NEW.seo = JSON_OBJECT();
 					END IF;
-					IF JSON_CONTAINS(NEW.url_past, JSON_ARRAY(OLD.url)) = 0 THEN
-						SET NEW.url_past = JSON_ARRAY_APPEND(NEW.url_past, "$", OLD.url);
+					SET arr = JSON_EXTRACT(NEW.seo,'$.url_past');
+					IF arr IS NULL THEN
+						SET arr = JSON_ARRAY();
+						SET NEW.seo = JSON_MERGE_PRESERVE(NEW.seo,JSON_OBJECT("url_past",arr));
+					END IF;
+
+					IF JSON_CONTAINS(arr,JSON_ARRAY(OLD.url)) = 0 THEN
+						SET arr = JSON_ARRAY_APPEND(arr,"$",OLD.url);
+						SET NEW.seo = JSON_SET(NEW.seo,"$.url_past",arr);
 					END IF;
 				END IF;
 			END`,
@@ -737,24 +762,33 @@ func initDynamicBehaviors() {
 					DECLARE tmp VARCHAR(256);
 					DECLARE count INT DEFAULT 0;
 					DECLARE found INT DEFAULT 0;
-		
+					DECLARE urlRef VARCHAR(256);
+					
 					IF NEW.url = '' THEN
-						SET tmp = geturl(NEW.%s);
+						SET urlRef = '%s';
+						IF urlRef <> 'DUAL' THEN
+							SELECT %s INTO tmp FROM %s WHERE %s = NEW.%s;
+						ELSE
+							SET tmp = New.%s; 
+						END IF;
+						SET tmp = geturl(tmp);
 						SET NEW.url = CONCAT('%s/', tmp);
 					END IF;
+					
 					IF LEFT(NEW.url,1) <> '/' THEN
 						SET NEW.url = CONCAT('/', NEW.url);
 					END IF;
-		
+					
 					SET found = (SELECT COUNT(*) FROM <<Table>> WHERE url = NEW.url);
 					WHILE found > 0 DO
 						SET count = count + 1;
-						IF NOT EXISTS (SELECT * FROM <<Table>> WHERE url = CONCAT(NEW.url,count)) THEN
-							SET NEW.url = CONCAT(NEW.url,count);
+						SET tmp = CONCAT('-',count);
+						IF NOT EXISTS (SELECT * FROM <<Table>> WHERE url = CONCAT(NEW.url,tmp)) THEN
+							SET NEW.url = CONCAT(NEW.url, tmp);
 							SET found = 0;
 						END IF;
 					END WHILE;
-				END`, s.UrlColumn(model), s.UrlPrefix(model)),
+				END`, urlRefModel, colToFetch, urlRefModel, colToQuery, urlColumn, urlColumn, s.UrlPrefix(model)),
 		}
 	}
 
