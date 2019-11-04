@@ -85,7 +85,8 @@ type MyISAM struct {
 }
 
 type SeoField struct {
-	Seo *JDoc `sql:"TYPE:json" json:"seo"`
+	Seo *JDoc  `sql:"TYPE:json" json:"seo"`
+	URL string `sql:"TYPE:varcvhar(256);not null;DEFAULT:''" json:"url" unique:"true"`
 }
 
 // type Seo struct {

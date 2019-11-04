@@ -722,30 +722,37 @@ func initDynamicBehaviors() {
 			`CREATE TRIGGER <<Table>>_seo_bfr_update BEFORE UPDATE ON <<Table>> FOR EACH ROW
 			BEGIN
 				DECLARE tmp VARCHAR(256);
-				DECLARE oldUrl VARCHAR(256);
 				DECLARE arr JSON;
-				
-				IF NEW.seo IS NULL THEN
-					SIGNAL SQLSTATE '45000'
-					SET MESSAGE_TEXT = '<<Table>>.Seo cannot be updated to EMPTY';
+			
+				IF NEW.seo IS NOT NULL THEN
+					SET arr = JSON_EXTRACT(OLD.seo,'$.url_past');
+					IF arr IS NULL THEN 
+						SET arr = JSON_ARRAY();
+					END IF;
+					SET NEW.seo = JSON_SET(NEW.seo,"$.url_past",arr);
 				END IF;
 
-				SET tmp = JSON_UNQUOTE(JSON_EXTRACT(NEW.seo,'$.url'));
-				IF LEFT(tmp,1) <> '/' THEN
-					SET tmp = CONCAT('/', tmp);
-					SET NEW.seo = JSON_SET(NEW.seo,"$.url",tmp);
+				IF NEW.url = '' THEN
+					SIGNAL SQLSTATE '45000'
+					SET MESSAGE_TEXT = 'portal_article.URL cannot be updated to EMPTY';
 				END IF;
-				
-				SET oldUrl = JSON_UNQUOTE(JSON_EXTRACT(OLD.seo,'$.url'));
-				IF (oldUrl <> '' OR oldUrl IS NOT NULL) AND (oldUrl <> tmp) THEN
+
+				IF LEFT(NEW.url,1) <> '/' THEN
+					SET NEW.url = CONCAT('/', NEW.url);
+				END IF;
+
+				IF (OLD.url <> '') AND (NEW.url <> OLD.url) THEN
+					IF NEW.seo IS NULL THEN
+						SET NEW.seo = JSON_OBJECT();
+					END IF;
 					SET arr = JSON_EXTRACT(NEW.seo,'$.url_past');
 					IF arr IS NULL THEN
 						SET arr = JSON_ARRAY();
 						SET NEW.seo = JSON_MERGE_PRESERVE(NEW.seo,JSON_OBJECT("url_past",arr));
 					END IF;
-					
-					IF JSON_CONTAINS(arr,JSON_ARRAY(oldUrl)) = 0 THEN
-						SET arr = JSON_ARRAY_APPEND(arr,"$",oldUrl);
+
+					IF JSON_CONTAINS(arr,JSON_ARRAY(OLD.url)) = 0 THEN
+						SET arr = JSON_ARRAY_APPEND(arr,"$",OLD.url);
 						SET NEW.seo = JSON_SET(NEW.seo,"$.url_past",arr);
 					END IF;
 				END IF;
@@ -757,31 +764,27 @@ func initDynamicBehaviors() {
 					DECLARE found INT DEFAULT 0;
 					DECLARE urlRef VARCHAR(256);
 					
-					IF NEW.seo IS NULL THEN
+					IF NEW.url = '' THEN
 						SET urlRef = '%s';
 						IF urlRef <> 'DUAL' THEN
 							SELECT %s INTO tmp FROM %s WHERE %s = NEW.%s;
 						ELSE
-							SET tmp = geturl(New.%s); 
+							SET tmp = New.%s; 
 						END IF;
-						SET NEW.seo = JSON_OBJECT("url", CONCAT('%s/', tmp));
+						SET tmp = geturl(tmp);
+						SET NEW.url = CONCAT('%s/', tmp);
 					END IF;
 					
-					IF JSON_VALID(NEW.seo) > 0 THEN
-						SET tmp = JSON_UNQUOTE(JSON_EXTRACT(NEW.seo, '$.url'));
-						IF LEFT(tmp,1) <> '/' THEN
-							SET NEW.seo = JSON_OBJECT("url", CONCAT('/', tmp));
-						END IF;
+					IF LEFT(NEW.url,1) <> '/' THEN
+						SET NEW.url = CONCAT('/', NEW.url);
 					END IF;
-
-					SET tmp = JSON_UNQUOTE(JSON_EXTRACT(NEW.seo, '$.url'));
-
-					SET found = (SELECT COUNT(*) FROM <<Table>> WHERE JSON_EXTRACT(seo,'$.url') = tmp);
+					
+					SET found = (SELECT COUNT(*) FROM <<Table>> WHERE url = NEW.url);
 					WHILE found > 0 DO
 						SET count = count + 1;
-						IF NOT EXISTS (SELECT * FROM <<Table>> WHERE JSON_EXTRACT(seo,'$.url') = CONCAT(tmp,count)) THEN
-							SET tmp = CONCAT(tmp,count);
-							SET NEW.seo = JSON_OBJECT("url", tmp);
+						SET tmp = CONCAT('-',count);
+						IF NOT EXISTS (SELECT * FROM <<Table>> WHERE url = CONCAT(NEW.url,tmp)) THEN
+							SET NEW.url = CONCAT(NEW.url, tmp);
 							SET found = 0;
 						END IF;
 					END WHILE;
