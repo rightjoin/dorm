@@ -129,7 +129,7 @@ func (s SeoField) GetURLRef(addr interface{}) (string, string, string) {
 
 	refs, ok := sf.Tag.Lookup("url_column_ref")
 	if !ok {
-		return "DUAL", "*", "true"
+		return "DUAL", "true", "*"
 	}
 
 	cols := strings.Split(refs, ",")
