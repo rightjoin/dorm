@@ -767,7 +767,7 @@ func initDynamicBehaviors() {
 					IF NEW.url = '' THEN
 						SET urlRef = '%s';
 						IF urlRef <> 'DUAL' THEN
-							SELECT %s INTO tmp FROM %s WHERE %s = NEW.%s;
+							SELECT %s INTO tmp FROM %s WHERE %s = NEW.%s LIMIT 1;
 						ELSE
 							SET tmp = New.%s; 
 						END IF;

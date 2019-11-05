@@ -86,7 +86,7 @@ type MyISAM struct {
 
 type SeoField struct {
 	Seo *JDoc  `sql:"TYPE:json" json:"seo"`
-	URL string `sql:"TYPE:varcvhar(256);not null;DEFAULT:''" json:"url" unique:"true"`
+	URL string `sql:"TYPE:varchar(256);not null;DEFAULT:''" json:"url" unique:"true"`
 }
 
 // type Seo struct {
@@ -104,9 +104,9 @@ type SeoField struct {
 func (s SeoField) UrlColumn(addr interface{}) string {
 	t := reflect.TypeOf(addr)
 	t = t.Elem()
-	sf, found := t.FieldByName("Seo")
+	sf, found := t.FieldByName("SeoField")
 	if !found {
-		panic("Seo field not found in model")
+		panic("SeoField field not found in model")
 	}
 
 	if col, ok := sf.Tag.Lookup("url_column"); ok {
@@ -120,16 +120,14 @@ func (s SeoField) UrlColumn(addr interface{}) string {
 func (s SeoField) GetURLRef(addr interface{}) (string, string, string) {
 	t := reflect.TypeOf(addr)
 	t = t.Elem()
-	sf, found := t.FieldByName("Seo")
+	sf, found := t.FieldByName("SeoField")
 	if !found {
-		panic("Seo field not found in model")
+		panic("SeoField field not found in model")
 	}
 
-	var refModel, refCol, refVal string
-
-	refs, ok := sf.Tag.Lookup("url_column_ref")
-	if !ok {
-		return "", "", ""
+	refs := sf.Tag.Get("url_column_ref")
+	if refs == "" {
+		return "DUAL", "true", "*"
 	}
 
 	cols := strings.Split(refs, ",")
@@ -137,11 +135,8 @@ func (s SeoField) GetURLRef(addr interface{}) (string, string, string) {
 		panic("provide three set of value incase of url_column_ref")
 	}
 
-	refModel = cols[0]
-	refCol = cols[1]
-	refVal = cols[2]
-
-	return refModel, refCol, refVal
+	// Model-to-query, col-to-query-upon, column-to-fetch
+	return cols[0], cols[1], cols[2]
 }
 
 // UrlPrefix gives you the prefix that should be used in the URLs.
@@ -149,7 +144,7 @@ func (s SeoField) GetURLRef(addr interface{}) (string, string, string) {
 func (s SeoField) UrlPrefix(addr interface{}) string {
 	t := reflect.TypeOf(addr)
 	t = t.Elem()
-	sf, found := t.FieldByName("Seo")
+	sf, found := t.FieldByName("SeoField")
 	if !found {
 		panic("Seo field not found in model")
 	}
