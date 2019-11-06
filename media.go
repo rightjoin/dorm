@@ -93,7 +93,6 @@ func NewMedia(f multipart.File, fh *multipart.FileHeader, entity, field string, 
 	dbo.Where("id=?", md.ID).Find(&md)
 
 	// Save bytes to disk (second)
-
 	directory, path := md.getPath()
 
 	// If local download is enabled
@@ -104,6 +103,8 @@ func NewMedia(f multipart.File, fh *multipart.FileHeader, entity, field string, 
 			return nil, err
 		}
 	}
+
+	directory = fig.StringOr("./media", "media.folder")
 
 	// For S3 upload we only need folder-prefix/<model-name>/.... as path
 	s3Path := path[strings.Index(path, directory)+len(directory):]
