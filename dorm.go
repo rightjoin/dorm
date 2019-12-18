@@ -734,7 +734,7 @@ func initDynamicBehaviors() {
 
 				IF NEW.url = '' THEN
 					SIGNAL SQLSTATE '45000'
-					SET MESSAGE_TEXT = 'portal_article.URL cannot be updated to EMPTY';
+					SET MESSAGE_TEXT = 'URL cannot be updated to EMPTY';
 				END IF;
 
 				IF LEFT(NEW.url,1) <> '/' THEN
