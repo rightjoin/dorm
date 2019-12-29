@@ -125,7 +125,7 @@ func TestAttributeSuperset(t *testing.T) {
 	assert.Nil(t, err)
 
 	val, err = stry.Accepts("d")
-	assert.NotNil(t, err)
+	assert.NotNil(t, err) // wrong test-case
 
 	// Int superset
 	inty := Attribute{
@@ -137,7 +137,7 @@ func TestAttributeSuperset(t *testing.T) {
 	assert.Nil(t, err)
 
 	val, err = inty.Accepts("901")
-	assert.NotNil(t, err)
+	assert.NotNil(t, err) // wrong test-case
 
 	// Decimal superset
 	decy := Attribute{
@@ -149,7 +149,7 @@ func TestAttributeSuperset(t *testing.T) {
 	assert.Nil(t, err)
 
 	val, err = decy.Accepts("9.01")
-	assert.NotNil(t, err)
+	assert.NotNil(t, err) // Wrong test-case
 }
 
 func TestAttributeUnits(t *testing.T) {
@@ -173,6 +173,48 @@ func TestAttributeUnits(t *testing.T) {
 
 	// Error
 	val, err = stry.Accepts("5 m")
+	assert.NotNil(t, err)
+
+}
+
+func TestAttributeEnumMultiSelect(t *testing.T) {
+	var val interface{}
+	var err error
+
+	var multiSelect uint8 = 1
+
+	enumStrSelecty := Attribute{
+		Datatype:    "string",
+		MultiSelect: &multiSelect,
+		Enums:       NewJArr("a", "b", "c"),
+	}
+
+	// Must Pass
+	val, err = enumStrSelecty.Accepts(`["a","b","c"]`)
+	assert.Nil(t, err)
+	assert.Equal(t, []interface{}{"a", "b", "c"}, val)
+
+	// Must fail: contains an invalid value for the enum
+	val, err = enumStrSelecty.Accepts(`["a","b","d"]`)
+	assert.NotNil(t, err)
+
+	// Test for other data types
+	enumIntSelecty := Attribute{
+		Datatype:    "int",
+		Enums:       NewJArr(1, 2, 3),
+		MultiSelect: &multiSelect,
+	}
+
+	// Must pass
+	val, err = enumIntSelecty.Accepts(`[1,2,3]`)
+	assert.Nil(t, err)
+	assert.Equal(t, []interface{}{1, 2, 3}, val)
+
+	// Must fail
+	val, err = enumIntSelecty.Accepts(`[1,4,5]`)
+	assert.NotNil(t, err)
+
+	val, err = enumIntSelecty.Accepts(`[1,2,"a"]`)
 	assert.NotNil(t, err)
 
 }
