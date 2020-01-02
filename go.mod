@@ -15,6 +15,7 @@ require (
 	github.com/mattn/go-colorable v0.1.4 // indirect
 	github.com/mattn/go-isatty v0.0.11 // indirect
 	github.com/mattn/go-sqlite3 v2.0.2+incompatible // indirect
+	github.com/pkg/errors v0.8.1
 	github.com/rightjoin/fig v0.0.0-20191218064823-c84a43a606cd
 	github.com/rightjoin/rlog v0.0.0-20190322103338-552cadac61e6
 	github.com/rightjoin/rutl v0.0.0-20190429034327-6ccca6b49792
