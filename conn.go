@@ -102,12 +102,15 @@ func GetCstrConfig(engine string, container ...string) string {
 		my := MysqlConn{}
 		fig.Struct(&my, parent)
 		return GetCstr(engine, map[string]interface{}{
-			"username": my.Username,
-			"password": my.Password,
-			"host":     my.Host,
-			"port":     my.Port,
-			"db":       my.Db,
-			"timezone": my.Timezone,
+			"username":     my.Username,
+			"password":     my.Password,
+			"host":         my.Host,
+			"port":         my.Port,
+			"db":           my.Db,
+			"timezone":     my.Timezone,
+			"readTimeout":  my.ReadTimeout,
+			"writeTimeout": my.WriteTimeout,
+			"timeout":      my.ConnTimeout,
 		})
 
 	default:
@@ -127,6 +130,25 @@ func GetCstr(engine string, prop map[string]interface{}) (cstr string) {
 			prop["host"], prop["port"], prop["db"],
 			url.QueryEscape(prop["timezone"].(string)),
 		)
+
+		if readTimeout, ok := prop["readTimeout"]; ok && readTimeout != "" {
+			if !strings.ContainsAny(fmt.Sprint(readTimeout), "smh") {
+				panic("timeout must be mentioned alongwith m,s,ms or h time's unit suffix")
+			}
+			cstr += fmt.Sprintf("&readTimeout=%s", readTimeout)
+		}
+		if writeTimeout, ok := prop["writeTimeout"]; ok && writeTimeout != "" {
+			if !strings.ContainsAny(fmt.Sprint(writeTimeout), "smh") {
+				panic("timeout must be mentioned alongwith m,s,ms or h time's unit suffix")
+			}
+			cstr += fmt.Sprintf("&writeTimeout=%s", writeTimeout)
+		}
+		if timeout, ok := prop["timeout"]; ok && timeout != "" {
+			if !strings.ContainsAny(fmt.Sprint(timeout), "smh") {
+				panic("timeout must be mentioned alongwith m,s,ms or h time's unit suffix")
+			}
+			cstr += fmt.Sprintf("&timeout=%s", timeout)
+		}
 	default:
 		panic("blah blah!")
 	}
