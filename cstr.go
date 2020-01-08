@@ -15,10 +15,10 @@ type MysqlConn struct {
 	Db           string
 	Username     string
 	Password     string
-	Timezone     string `conf:"optional"`
-	ReadTimeout  string `conf:"optional"`
-	WriteTimeout string `conf:"optional"`
-	ConnTimeout  string `conf:"optional"`
+	Timezone     string `fig:"optional"`
+	ReadTimeout  string `fig:"optional"`
+	WriteTimeout string `fig:"optional"`
+	ConnTimeout  string `fig:"optional"`
 }
 
 // CStr returns the properly formatted connection
