@@ -17,12 +17,12 @@ type Attribute struct {
 	Name     string `sql:"TYPE:varchar(64);not null" json:"name" insert:"must"`
 	Datatype string `sql:"TYPE:enum('int','decimal','string','bool');not null" json:"datatype" insert:"must"`
 
-	Mandatory uint8    `sql:"TYPE:tinyint unsigned;not null;DEFAULT:'0'" json:"mandatory"`
+	Mandatory uint8    `sql:"TYPE:tinyint unsigned;not null;DEFAULT:'0'" json:"mandatory" update:"no"`
 	Enums     *JArr    `sql:"TYPE:json" json:"enums"`
 	Units     *JArrStr `sql:"TYPE:json;" json:"units"`
 
 	// multi-select flag decides whether attribute of enum type can have multiple values
-	MultiSelect *uint8 `sql:"TYPE:tinyint(1) unsigned;not null;DEFAULT:'0'" json:"multi_select"`
+	MultiSelect *uint8 `sql:"TYPE:tinyint(1) unsigned;not null;DEFAULT:'0'" json:"multi_select" update:"no"`
 }
 
 func (a Attribute) Accepts(inp string) (interface{}, error) {
