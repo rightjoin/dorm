@@ -15,7 +15,7 @@ type Stateful struct {
 }
 
 type StatefulKind struct {
-	MachineKind  string     `sql:"TYPE:varchar(96);not null;DEFAULT:'default'" json:"machine_kind"`
+	MachineKind  string     `sql:"TYPE:varchar(96);not null" json:"machine_kind"`
 	MachineState *string    `sql:"TYPE:varchar(96);null" json:"machine_state"`
 	StatedAt     *time.Time `sql:"TYPE:datetime;null;" json:"stated_at" insert:"no" update:"no"`
 }
@@ -26,7 +26,7 @@ type Stateful4 struct {
 }
 
 type StatefulKind4 struct {
-	MachineKind  string     `sql:"TYPE:varchar(96);not null;DEFAULT:'default'" json:"machine_kind"`
+	MachineKind  string     `sql:"TYPE:varchar(96);not null" json:"machine_kind"`
 	MachineState *string    `sql:"TYPE:varchar(96);null" json:"machine_state"`
 	StatedAt     *time.Time `sql:"TYPE:datetime(4);null;" json:"stated_at" insert:"no" update:"no"`
 }
@@ -40,7 +40,7 @@ type StateMachine struct {
 	Entity string `sql:"TYPE:varchar(96);not null" json:"entity" insert:"must" update:"no"`
 
 	// To support multiple state machines for an entity
-	Kind *string `sql:"TYPE:varchar(96)" json:"kind" unique:"uniq_entity_kind(entity,kind)"`
+	Kind *string `sql:"TYPE:varchar(96);null" json:"kind" unique:"uniq_entity_kind(entity,kind)"`
 
 	// All possible states
 	States *JArrStr `sql:"TYPE:json" json:"states" insert:"must"`

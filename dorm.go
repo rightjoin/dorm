@@ -221,6 +221,12 @@ func initStaticBehaviors() {
 			DECLARE tmps   VARCHAR(512);
 			DECLARE tmp    VARCHAR(128);
 
+			# check to validate if kind is being provided
+			IF NEW.machine_kind IS NULL OR NEW.machine_kind = '' THEN
+				SIGNAL SQLSTATE '45000'
+				SET MESSAGE_TEXT = 'State machine kind is missing during row insertion';
+			END IF;
+
 			# fetch state machine
 			SELECT default_state, entry_states, states INTO deft, entr, sts FROM state_machine WHERE entity = '<<Table>>' AND kind = NEW.machine_kind; 
 			
@@ -484,6 +490,12 @@ func initStaticBehaviors() {
 			DECLARE tmpe   VARCHAR(512);
 			DECLARE tmps   VARCHAR(512);
 			DECLARE tmp    VARCHAR(128);
+
+			# check to validate if kind is being provided
+			IF NEW.machine_kind IS NULL OR NEW.machine_kind = '' THEN
+				SIGNAL SQLSTATE '45000'
+				SET MESSAGE_TEXT = 'State machine kind is missing during row insertion';
+			END IF;
 
 			# fetch state machine
 			SELECT default_state, entry_states, states INTO deft, entr, sts FROM state_machine WHERE entity = '<<Table>>' AND kind = NEW.machine_kind; 
