@@ -12,23 +12,27 @@ import (
 type Stateful struct {
 	MachineState *string    `sql:"TYPE:varchar(96);null" json:"machine_state"`
 	StatedAt     *time.Time `sql:"TYPE:datetime;null;" json:"stated_at" insert:"no" update:"no"`
+	StateRemarks *string    `sql:"TYPE:varchar(256);null" json:"state_remarks"`
 }
 
 type StatefulKind struct {
 	MachineKind  string     `sql:"TYPE:varchar(96);not null;DEFAULT:'default'" json:"machine_kind"`
 	MachineState *string    `sql:"TYPE:varchar(96);null" json:"machine_state"`
 	StatedAt     *time.Time `sql:"TYPE:datetime;null;" json:"stated_at" insert:"no" update:"no"`
+	StateRemarks *string    `sql:"TYPE:varchar(256);null" json:"state_remarks"`
 }
 
 type Stateful4 struct {
 	MachineState *string    `sql:"TYPE:varchar(96);null" json:"machine_state"`
 	StatedAt     *time.Time `sql:"TYPE:datetime(4);null;" json:"stated_at" insert:"no" update:"no"`
+	StateRemarks *string    `sql:"TYPE:varchar(256);null" json:"state_remarks"`
 }
 
 type StatefulKind4 struct {
 	MachineKind  string     `sql:"TYPE:varchar(96);not null;DEFAULT:'default'" json:"machine_kind"`
 	MachineState *string    `sql:"TYPE:varchar(96);null" json:"machine_state"`
 	StatedAt     *time.Time `sql:"TYPE:datetime(4);null;" json:"stated_at" insert:"no" update:"no"`
+	StateRemarks *string    `sql:"TYPE:varchar(256);null" json:"state_remarks"`
 }
 
 // StateMachine is the database table that contains all the states
@@ -176,6 +180,7 @@ type StateLog struct {
 	EntityID uint    `sql:"not null;" json:"entity_id" insert:"must" update:"no" index:"entity_name_id(entity,entity_id)"`
 	OldState *string `sql:"TYPE:varchar(128)" json:"old_state"`
 	NewState *string `sql:"TYPE:varchar(128)" json:"new_state"`
+	Remarks  *string `sql:"TYPE:varchar(256);null" json:"remarks"`
 	Timed
 	ProcessedAt *time.Time `sql:"null" json:"processed_at" index:"true"`
 	Error       *uint8     `sql:"TYPE:tinyint(1) unsigned;null" json:"error"`

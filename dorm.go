@@ -195,17 +195,33 @@ func initStaticBehaviors() {
 		// push inserts into entities to state-queue
 		`CREATE TRIGGER <<Table>>_stateful_aft_insert AFTER INSERT ON <<Table>> FOR EACH ROW
 		BEGIN	
+			DECLARE r varchar(256);
+
+			# state_machine's remarks
+			IF NEW.state_remarks IS NOT NULL THEN
+				SET r = NEW.state_remarks;
+			END IF;
+
 			IF NOT NEW.machine_state IS NULL THEN
-				INSERT INTO state_log (entity,entity_id,created_at,updated_at,old_state,new_state,who) VALUES ('<<Table>>',NEW.ID,NEW.created_at,NEW.updated_at,'',NEW.machine_state,NEW.who);
+				INSERT INTO state_log (entity,entity_id,created_at,updated_at,old_state,new_state,remarks,who) VALUES ('<<Table>>',NEW.ID,NEW.created_at,NEW.updated_at,'',NEW.machine_state,r,NEW.who);
 			END IF;
 		END`,
 		// push updates of state machine to state-queue
 		`CREATE TRIGGER <<Table>>_stateful_aft_update AFTER UPDATE ON <<Table>> FOR EACH ROW
 		BEGIN	
+			DECLARE r varchar(256);
+				
+			# state_machine's remarks
+			IF NEW.state_remarks IS NOT NULL THEN
+				IF OLD.state_remarks IS NULL OR OLD.state_remarks <> NEW.state_remarks THEN
+					SET r = NEW.state_remarks;
+				END IF;
+			END IF;
+			
 			IF OLD.machine_state IS NULL AND NOT NEW.machine_state IS NULL THEN
-				INSERT INTO state_log (entity,entity_id,created_at,updated_at,old_state,new_state,who) VALUES ('<<Table>>',NEW.ID,NEW.created_at,NEW.updated_at,'',NEW.machine_state,NEW.who);
+				INSERT INTO state_log (entity,entity_id,created_at,updated_at,old_state,new_state,remarks,who) VALUES ('<<Table>>',NEW.ID,NEW.created_at,NEW.updated_at,'',NEW.machine_state,r,NEW.who);
 			ELSEIF NOT OLD.machine_state IS NULL AND NOT NEW.machine_state IS NULL AND OLD.machine_state <> NEW.machine_state THEN
-				INSERT INTO state_log (entity,entity_id,created_at,updated_at,old_state,new_state,who) VALUES ('<<Table>>',NEW.ID,NEW.created_at,NEW.updated_at,OLD.machine_state,NEW.machine_state,NEW.who);
+				INSERT INTO state_log (entity,entity_id,created_at,updated_at,old_state,new_state,remarks,who) VALUES ('<<Table>>',NEW.ID,NEW.created_at,NEW.updated_at,OLD.machine_state,NEW.machine_state,r,NEW.who);
 			END IF;
         END`,
 	}
@@ -328,17 +344,33 @@ func initStaticBehaviors() {
 		// push inserts into entities to state-queue
 		`CREATE TRIGGER <<Table>>_stateful_kind_aft_insert AFTER INSERT ON <<Table>> FOR EACH ROW
 			BEGIN
+				DECLARE r varchar(256);
+					
+				# state_machine's remarks
+				IF NEW.state_remarks IS NOT NULL THEN
+					SET r = NEW.state_remarks;
+				END IF;
+			
 				IF NOT NEW.machine_state IS NULL THEN
-					INSERT INTO state_log (entity,entity_id,created_at,updated_at,old_state,new_state,who) VALUES ('<<Table>>',NEW.ID,NEW.created_at,NEW.updated_at,NULL,NEW.machine_state,NEW.who);
+					INSERT INTO state_log (entity,entity_id,created_at,updated_at,old_state,new_state,remarks,who) VALUES ('<<Table>>',NEW.ID,NEW.created_at,NEW.updated_at,NULL,NEW.machine_state,r,NEW.who);
 				END IF;
 			END`,
 		// push updates of state machine to state-queue
 		`CREATE TRIGGER <<Table>>_stateful_kind_aft_update AFTER UPDATE ON <<Table>> FOR EACH ROW
 			BEGIN
+				DECLARE r varchar(256);
+					
+				# state_machine's remarks
+				IF NEW.state_remarks IS NOT NULL THEN
+					IF OLD.state_remarks IS NULL OR OLD.state_remarks <> NEW.state_remarks THEN
+						SET r = NEW.state_remarks;
+					END IF;
+				END IF;
+				
 				IF OLD.machine_state IS NULL AND NOT NEW.machine_state IS NULL THEN
-					INSERT INTO state_log (entity,entity_id,created_at,updated_at,old_state,new_state,who) VALUES ('<<Table>>',NEW.ID,NEW.created_at,NEW.updated_at,NULL,NEW.machine_state,NEW.who);
+					INSERT INTO state_log (entity,entity_id,created_at,updated_at,old_state,new_state,remarks,who) VALUES ('<<Table>>',NEW.ID,NEW.created_at,NEW.updated_at,NULL,NEW.machine_state,r,NEW.who);
 				ELSEIF NOT OLD.machine_state IS NULL AND NOT NEW.machine_state IS NULL AND OLD.machine_state <> NEW.machine_state THEN
-					INSERT INTO state_log (entity,entity_id,created_at,updated_at,old_state,new_state,who) VALUES ('<<Table>>',NEW.ID,NEW.created_at,NEW.updated_at,OLD.machine_state,NEW.machine_state,NEW.who);
+					INSERT INTO state_log (entity,entity_id,created_at,updated_at,old_state,new_state,remarks,who) VALUES ('<<Table>>',NEW.ID,NEW.created_at,NEW.updated_at,OLD.machine_state,NEW.machine_state,r,NEW.who);
 				END IF;
 			END`,
 	}
@@ -458,17 +490,32 @@ func initStaticBehaviors() {
 		// push inserts into entities to state-queue
 		`CREATE TRIGGER <<Table>>_stateful_4_aft_insert AFTER INSERT ON <<Table>> FOR EACH ROW
 			BEGIN
+				DECLARE r varchar(256);
+					
+				# state_machine's remarks
+				IF NEW.state_remarks IS NOT NULL THEN
+					SET r = NEW.state_remarks;
+				END IF;
+
 				IF NOT NEW.machine_state IS NULL THEN
-					INSERT INTO state_log (entity,entity_id,created_at,updated_at,old_state,new_state,who) VALUES ('<<Table>>',NEW.ID,NEW.created_at,NEW.updated_at,NULL,NEW.machine_state,NEW.who);
+					INSERT INTO state_log (entity,entity_id,created_at,updated_at,old_state,new_state,remarks,who) VALUES ('<<Table>>',NEW.ID,NEW.created_at,NEW.updated_at,NULL,NEW.machine_state,r,NEW.who);
 				END IF;
 			END`,
 		// push updates of state machine to state-queue
 		`CREATE TRIGGER <<Table>>_stateful_4_aft_update AFTER UPDATE ON <<Table>> FOR EACH ROW
 			BEGIN
+				DECLARE r varchar(256);
+					
+				# state_machine's remarks
+				IF NEW.state_remarks IS NOT NULL THEN
+					IF OLD.state_remarks IS NULL OR OLD.state_remarks <> NEW.state_remarks THEN
+						SET r = NEW.state_remarks;
+					END IF;
+				END IF;
 				IF OLD.machine_state IS NULL AND NOT NEW.machine_state IS NULL THEN
-					INSERT INTO state_log (entity,entity_id,created_at,updated_at,old_state,new_state,who) VALUES ('<<Table>>',NEW.ID,NEW.created_at,NEW.updated_at,NULL,NEW.machine_state,NEW.who);
+					INSERT INTO state_log (entity,entity_id,created_at,updated_at,old_state,new_state,remarks,who) VALUES ('<<Table>>',NEW.ID,NEW.created_at,NEW.updated_at,NULL,NEW.machine_state,r,NEW.who);
 				ELSEIF NOT OLD.machine_state IS NULL AND NOT NEW.machine_state IS NULL AND OLD.machine_state <> NEW.machine_state THEN
-					INSERT INTO state_log (entity,entity_id,created_at,updated_at,old_state,new_state,who) VALUES ('<<Table>>',NEW.ID,NEW.created_at,NEW.updated_at,OLD.machine_state,NEW.machine_state,NEW.who);
+					INSERT INTO state_log (entity,entity_id,created_at,updated_at,old_state,new_state,remarks,who) VALUES ('<<Table>>',NEW.ID,NEW.created_at,NEW.updated_at,OLD.machine_state,NEW.machine_state,r,NEW.who);
 				END IF;
 			END`,
 	}
@@ -592,17 +639,32 @@ func initStaticBehaviors() {
 		// push inserts into entities to state-queue
 		`CREATE TRIGGER <<Table>>_stateful_kind_4_aft_insert AFTER INSERT ON <<Table>> FOR EACH ROW
 			BEGIN
+				DECLARE r varchar(256);
+					
+				# state_machine's remarks
+				IF NEW.state_remarks IS NOT NULL THEN
+					SET r = NEW.state_remarks;
+				END IF;
 				IF NOT NEW.machine_state IS NULL THEN
-					INSERT INTO state_log (entity,entity_id,created_at,updated_at,old_state,new_state,who) VALUES ('<<Table>>',NEW.ID,NEW.created_at,NEW.updated_at,NULL,NEW.machine_state,NEW.who);
+					INSERT INTO state_log (entity,entity_id,created_at,updated_at,old_state,new_state,remarks,who) VALUES ('<<Table>>',NEW.ID,NEW.created_at,NEW.updated_at,NULL,NEW.machine_state,r,NEW.who);
 				END IF;
 			END`,
 		// push updates of state machine to state-queue
 		`CREATE TRIGGER <<Table>>_stateful_kind_4_aft_update AFTER UPDATE ON <<Table>> FOR EACH ROW
 			BEGIN
+				DECLARE r varchar(256);
+						
+				# state_machine's remarks
+				IF NEW.state_remarks IS NOT NULL THEN
+					IF OLD.state_remarks IS NULL OR OLD.state_remarks <> NEW.state_remarks THEN
+						SET r = NEW.state_remarks;
+					END IF;
+				END IF;
+			
 				IF OLD.machine_state IS NULL AND NOT NEW.machine_state IS NULL THEN
-					INSERT INTO state_log (entity,entity_id,created_at,updated_at,old_state,new_state,who) VALUES ('<<Table>>',NEW.ID,NEW.created_at,NEW.updated_at,NULL,NEW.machine_state,NEW.who);
+					INSERT INTO state_log (entity,entity_id,created_at,updated_at,old_state,new_state,remarks,who) VALUES ('<<Table>>',NEW.ID,NEW.created_at,NEW.updated_at,NULL,NEW.machine_state,r,NEW.who);
 				ELSEIF NOT OLD.machine_state IS NULL AND NOT NEW.machine_state IS NULL AND OLD.machine_state <> NEW.machine_state THEN
-					INSERT INTO state_log (entity,entity_id,created_at,updated_at,old_state,new_state,who) VALUES ('<<Table>>',NEW.ID,NEW.created_at,NEW.updated_at,OLD.machine_state,NEW.machine_state,NEW.who);
+					INSERT INTO state_log (entity,entity_id,created_at,updated_at,old_state,new_state,remarks,who) VALUES ('<<Table>>',NEW.ID,NEW.created_at,NEW.updated_at,OLD.machine_state,NEW.machine_state,r,NEW.who);
 				END IF;
 			END`,
 	}
