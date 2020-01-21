@@ -138,6 +138,11 @@ func initStaticBehaviors() {
 			DECLARE tmps   VARCHAR(512);
 			DECLARE tmpn   VARCHAR(128);
 			DECLARE tmpt   VARCHAR(2048);
+
+			# check for state_remarks, remove stale remarks
+			IF NEW.state_remarks IS NULL OR NEW.state_remarks = '' OR NEW.state_remarks = OLD.state_remarks THEN
+				SET NEW.state_remarks = NULL;
+			END IF;
 			
 			# is a new state being set
 			IF NOT NEW.machine_state IS NULL THEN 
@@ -283,6 +288,11 @@ func initStaticBehaviors() {
 			DECLARE tmps   VARCHAR(512);
 			DECLARE tmpn   VARCHAR(128);
 			DECLARE tmpt   VARCHAR(2048);
+
+			# check for state_remarks, remove stale remarks
+			IF NEW.state_remarks IS NULL OR NEW.state_remarks = '' OR NEW.state_remarks = OLD.state_remarks THEN
+				SET NEW.state_remarks = NULL;
+			END IF;
 			
 			# is a new state being set
 			IF NOT NEW.machine_state IS NULL THEN 
@@ -434,6 +444,11 @@ func initStaticBehaviors() {
 			DECLARE tmps   VARCHAR(512);
 			DECLARE tmpn   VARCHAR(128);
 			DECLARE tmpt   VARCHAR(2048);
+
+			# check for state_remarks, remove stale remarks
+			IF NEW.state_remarks IS NULL OR NEW.state_remarks = '' OR NEW.state_remarks = OLD.state_remarks THEN
+				SET NEW.state_remarks = NULL;
+			END IF;
 			
 			# is a new state being set
 			IF NOT NEW.machine_state IS NULL THEN 
@@ -578,6 +593,11 @@ func initStaticBehaviors() {
 			DECLARE tmps   VARCHAR(512);
 			DECLARE tmpn   VARCHAR(128);
 			DECLARE tmpt   VARCHAR(2048);
+
+			# check for state_remarks, remove stale remarks
+			IF NEW.state_remarks IS NULL OR NEW.state_remarks = '' OR NEW.state_remarks = OLD.state_remarks THEN
+				SET NEW.state_remarks = NULL;
+			END IF;
 			
 			# is a new state being set
 			IF NOT NEW.machine_state IS NULL THEN 
