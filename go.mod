@@ -8,6 +8,7 @@ require (
 	github.com/azer/snakecase v1.0.0 // indirect
 	github.com/denisenkom/go-mssqldb v0.0.0-20191128021309-1d7a30a10f73 // indirect
 	github.com/go-sql-driver/mysql v1.4.1
+	github.com/inconshreveable/log15 v0.0.0-20180818164646-67afb5ed74ec // indirect
 	github.com/jinzhu/gorm v1.9.11
 	github.com/jinzhu/now v1.1.1 // indirect
 	github.com/lib/pq v1.2.0 // indirect
@@ -19,7 +20,6 @@ require (
 	github.com/rightjoin/rlog v0.0.0-20190322103338-552cadac61e6
 	github.com/rightjoin/rutl v0.0.0-20190429034327-6ccca6b49792
 	github.com/stretchr/testify v1.4.0
-	gitlabtc.futuregroup.in/tcommerce/backend/flog v0.0.0-20191017093613-470f72cb1e54
 	golang.org/x/crypto v0.0.0-20191206172530-e9b2fee46413 // indirect
 	google.golang.org/appengine v1.6.5 // indirect
 )
