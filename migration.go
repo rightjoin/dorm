@@ -98,7 +98,7 @@ func RunMigration() {
 		query := string(data)
 		skipFile := false
 
-		log.Info(sqlMigrationRLogMessage, "file-name", file, "Executing Query", query)
+		log.Info(sqlMigrationRLogMessage, "file-name", file, "query", query)
 		if strings.Contains(strings.ToLower(query), "delete") {
 
 			fmt.Println("Restricted keyword DELETE found in file: " + file)
@@ -120,9 +120,9 @@ func RunMigration() {
 		}
 
 		if err != nil {
-			log.Info(sqlMigrationRLogMessage, "file-name", file, "Execution Status", "Failed", "Error", err)
+			log.Info(sqlMigrationRLogMessage, "file-name", file, "status", "Failed", "Error", err)
 		} else {
-			log.Info(sqlMigrationRLogMessage, "file-name", file, "Execution Status", "Success")
+			log.Info(sqlMigrationRLogMessage, "file-name", file, "status", "Success")
 		}
 
 		who := map[string]interface{}{
