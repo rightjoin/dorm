@@ -101,7 +101,7 @@ func RunMigration() {
 		log.Info(sqlMigrationRLogMessage, "file-name", file, "Executing Query", query)
 		if strings.Contains(strings.ToLower(query), "delete") {
 
-			fmt.Println("Restricted keyword DELETE found: " + query)
+			fmt.Println("Restricted keyword DELETE found in file: " + file)
 
 			reader := bufio.NewReader(os.Stdin)
 			fmt.Println("Are you sure you want to continue ?? ( Type:", code, ")")
