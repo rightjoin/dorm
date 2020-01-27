@@ -111,7 +111,7 @@ func RunMigration() {
 				fmt.Println("Incorrect entry. Ignoring file " + file)
 
 				skipFile = true
-				err = errors.Errorf("skipping file %s, contains restricted keyword DELETE")
+				err = errors.Errorf("skipping file %s, contains restricted keyword DELETE", file)
 			}
 		}
 
