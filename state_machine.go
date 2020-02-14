@@ -193,6 +193,7 @@ type StateLog4 struct {
 	EntityID uint    `sql:"not null;" json:"entity_id" insert:"must" update:"no" index:"entity_name_id(entity,entity_id)"`
 	OldState *string `sql:"TYPE:varchar(128)" json:"old_state"`
 	NewState *string `sql:"TYPE:varchar(128)" json:"new_state"`
+	Remarks  *string `sql:"TYPE:varchar(256);null" json:"remarks"`
 	Timed4Lite
 	ProcessedAt *time.Time `sql:"null" json:"processed_at" index:"true"`
 	Error       *uint8     `sql:"TYPE:tinyint(1) unsigned;null" json:"error"`
