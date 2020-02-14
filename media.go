@@ -16,6 +16,7 @@ import (
 	"strings"
 
 	"github.com/rightjoin/fig"
+	log "github.com/rightjoin/rlog"
 )
 
 type Media struct {
@@ -109,6 +110,7 @@ func NewMedia(f multipart.File, fh *multipart.FileHeader, entity, field string, 
 	// For S3 upload we only need folder-prefix/<model-name>/.... as path
 	s3Path := path[strings.Index(path, directory)+len(directory):]
 
+	log.Info("Uploading Media", "S3_path", s3Path, "directory", directory)
 	// Upload to S3
 	uploadToS3 := fig.BoolOr(false, "media.s3.upload")
 	if uploadToS3 {
