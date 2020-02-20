@@ -10,12 +10,15 @@ type Connecter interface {
 }
 
 type MysqlConn struct {
-	Host     string
-	Port     int
-	Db       string
-	Username string
-	Password string
-	Timezone string `conf:"optional"`
+	Host         string
+	Port         int
+	Db           string
+	Username     string
+	Password     string
+	Timezone     string `fig:"optional"`
+	ReadTimeout  string `fig:"optional"`
+	WriteTimeout string `fig:"optional"`
+	ConnTimeout  string `fig:"optional"`
 }
 
 // CStr returns the properly formatted connection

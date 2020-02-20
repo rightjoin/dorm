@@ -138,6 +138,11 @@ func initStaticBehaviors() {
 			DECLARE tmps   VARCHAR(512);
 			DECLARE tmpn   VARCHAR(128);
 			DECLARE tmpt   VARCHAR(2048);
+
+			# check for state_remarks, remove stale remarks
+			IF NEW.state_remarks IS NULL OR NEW.state_remarks = '' OR NEW.state_remarks = OLD.state_remarks THEN
+				SET NEW.state_remarks = NULL;
+			END IF;
 			
 			# is a new state being set
 			IF NOT NEW.machine_state IS NULL THEN 
@@ -195,17 +200,33 @@ func initStaticBehaviors() {
 		// push inserts into entities to state-queue
 		`CREATE TRIGGER <<Table>>_stateful_aft_insert AFTER INSERT ON <<Table>> FOR EACH ROW
 		BEGIN	
+			DECLARE r varchar(256);
+
+			# state_machine's remarks
+			IF NEW.state_remarks IS NOT NULL THEN
+				SET r = NEW.state_remarks;
+			END IF;
+
 			IF NOT NEW.machine_state IS NULL THEN
-				INSERT INTO state_log (entity,entity_id,created_at,updated_at,old_state,new_state,who) VALUES ('<<Table>>',NEW.ID,NEW.created_at,NEW.updated_at,'',NEW.machine_state,NEW.who);
+				INSERT INTO state_log (entity,entity_id,created_at,updated_at,old_state,new_state,remarks,who) VALUES ('<<Table>>',NEW.ID,NEW.created_at,NEW.updated_at,'',NEW.machine_state,r,NEW.who);
 			END IF;
 		END`,
 		// push updates of state machine to state-queue
 		`CREATE TRIGGER <<Table>>_stateful_aft_update AFTER UPDATE ON <<Table>> FOR EACH ROW
 		BEGIN	
+			DECLARE r varchar(256);
+				
+			# state_machine's remarks
+			IF NEW.state_remarks IS NOT NULL THEN
+				IF OLD.state_remarks IS NULL OR OLD.state_remarks <> NEW.state_remarks THEN
+					SET r = NEW.state_remarks;
+				END IF;
+			END IF;
+			
 			IF OLD.machine_state IS NULL AND NOT NEW.machine_state IS NULL THEN
-				INSERT INTO state_log (entity,entity_id,created_at,updated_at,old_state,new_state,who) VALUES ('<<Table>>',NEW.ID,NEW.created_at,NEW.updated_at,'',NEW.machine_state,NEW.who);
+				INSERT INTO state_log (entity,entity_id,created_at,updated_at,old_state,new_state,remarks,who) VALUES ('<<Table>>',NEW.ID,NEW.created_at,NEW.updated_at,'',NEW.machine_state,r,NEW.who);
 			ELSEIF NOT OLD.machine_state IS NULL AND NOT NEW.machine_state IS NULL AND OLD.machine_state <> NEW.machine_state THEN
-				INSERT INTO state_log (entity,entity_id,created_at,updated_at,old_state,new_state,who) VALUES ('<<Table>>',NEW.ID,NEW.created_at,NEW.updated_at,OLD.machine_state,NEW.machine_state,NEW.who);
+				INSERT INTO state_log (entity,entity_id,created_at,updated_at,old_state,new_state,remarks,who) VALUES ('<<Table>>',NEW.ID,NEW.created_at,NEW.updated_at,OLD.machine_state,NEW.machine_state,r,NEW.who);
 			END IF;
         END`,
 	}
@@ -220,6 +241,12 @@ func initStaticBehaviors() {
 			DECLARE tmpe   VARCHAR(512);
 			DECLARE tmps   VARCHAR(512);
 			DECLARE tmp    VARCHAR(128);
+
+			# check to validate if kind is being provided
+			IF NEW.machine_kind IS NULL OR NEW.machine_kind = '' THEN
+				SIGNAL SQLSTATE '45000'
+				SET MESSAGE_TEXT = 'State machine kind is missing during row insertion';
+			END IF;
 
 			# fetch state machine
 			SELECT default_state, entry_states, states INTO deft, entr, sts FROM state_machine WHERE entity = '<<Table>>' AND kind = NEW.machine_kind; 
@@ -267,6 +294,11 @@ func initStaticBehaviors() {
 			DECLARE tmps   VARCHAR(512);
 			DECLARE tmpn   VARCHAR(128);
 			DECLARE tmpt   VARCHAR(2048);
+
+			# check for state_remarks, remove stale remarks
+			IF NEW.state_remarks IS NULL OR NEW.state_remarks = '' OR NEW.state_remarks = OLD.state_remarks THEN
+				SET NEW.state_remarks = NULL;
+			END IF;
 			
 			# is a new state being set
 			IF NOT NEW.machine_state IS NULL THEN 
@@ -328,17 +360,33 @@ func initStaticBehaviors() {
 		// push inserts into entities to state-queue
 		`CREATE TRIGGER <<Table>>_stateful_kind_aft_insert AFTER INSERT ON <<Table>> FOR EACH ROW
 			BEGIN
+				DECLARE r varchar(256);
+					
+				# state_machine's remarks
+				IF NEW.state_remarks IS NOT NULL THEN
+					SET r = NEW.state_remarks;
+				END IF;
+			
 				IF NOT NEW.machine_state IS NULL THEN
-					INSERT INTO state_log (entity,entity_id,created_at,updated_at,old_state,new_state,who) VALUES ('<<Table>>',NEW.ID,NEW.created_at,NEW.updated_at,NULL,NEW.machine_state,NEW.who);
+					INSERT INTO state_log (entity,entity_id,created_at,updated_at,old_state,new_state,remarks,who) VALUES ('<<Table>>',NEW.ID,NEW.created_at,NEW.updated_at,NULL,NEW.machine_state,r,NEW.who);
 				END IF;
 			END`,
 		// push updates of state machine to state-queue
 		`CREATE TRIGGER <<Table>>_stateful_kind_aft_update AFTER UPDATE ON <<Table>> FOR EACH ROW
 			BEGIN
+				DECLARE r varchar(256);
+					
+				# state_machine's remarks
+				IF NEW.state_remarks IS NOT NULL THEN
+					IF OLD.state_remarks IS NULL OR OLD.state_remarks <> NEW.state_remarks THEN
+						SET r = NEW.state_remarks;
+					END IF;
+				END IF;
+				
 				IF OLD.machine_state IS NULL AND NOT NEW.machine_state IS NULL THEN
-					INSERT INTO state_log (entity,entity_id,created_at,updated_at,old_state,new_state,who) VALUES ('<<Table>>',NEW.ID,NEW.created_at,NEW.updated_at,NULL,NEW.machine_state,NEW.who);
+					INSERT INTO state_log (entity,entity_id,created_at,updated_at,old_state,new_state,remarks,who) VALUES ('<<Table>>',NEW.ID,NEW.created_at,NEW.updated_at,NULL,NEW.machine_state,r,NEW.who);
 				ELSEIF NOT OLD.machine_state IS NULL AND NOT NEW.machine_state IS NULL AND OLD.machine_state <> NEW.machine_state THEN
-					INSERT INTO state_log (entity,entity_id,created_at,updated_at,old_state,new_state,who) VALUES ('<<Table>>',NEW.ID,NEW.created_at,NEW.updated_at,OLD.machine_state,NEW.machine_state,NEW.who);
+					INSERT INTO state_log (entity,entity_id,created_at,updated_at,old_state,new_state,remarks,who) VALUES ('<<Table>>',NEW.ID,NEW.created_at,NEW.updated_at,OLD.machine_state,NEW.machine_state,r,NEW.who);
 				END IF;
 			END`,
 	}
@@ -402,6 +450,11 @@ func initStaticBehaviors() {
 			DECLARE tmps   VARCHAR(512);
 			DECLARE tmpn   VARCHAR(128);
 			DECLARE tmpt   VARCHAR(2048);
+
+			# check for state_remarks, remove stale remarks
+			IF NEW.state_remarks IS NULL OR NEW.state_remarks = '' OR NEW.state_remarks = OLD.state_remarks THEN
+				SET NEW.state_remarks = NULL;
+			END IF;
 			
 			# is a new state being set
 			IF NOT NEW.machine_state IS NULL THEN 
@@ -458,17 +511,32 @@ func initStaticBehaviors() {
 		// push inserts into entities to state-queue
 		`CREATE TRIGGER <<Table>>_stateful_4_aft_insert AFTER INSERT ON <<Table>> FOR EACH ROW
 			BEGIN
+				DECLARE r varchar(256);
+					
+				# state_machine's remarks
+				IF NEW.state_remarks IS NOT NULL THEN
+					SET r = NEW.state_remarks;
+				END IF;
+
 				IF NOT NEW.machine_state IS NULL THEN
-					INSERT INTO state_log (entity,entity_id,created_at,updated_at,old_state,new_state,who) VALUES ('<<Table>>',NEW.ID,NEW.created_at,NEW.updated_at,NULL,NEW.machine_state,NEW.who);
+					INSERT INTO state_log (entity,entity_id,created_at,updated_at,old_state,new_state,remarks,who) VALUES ('<<Table>>',NEW.ID,NEW.created_at,NEW.updated_at,NULL,NEW.machine_state,r,NEW.who);
 				END IF;
 			END`,
 		// push updates of state machine to state-queue
 		`CREATE TRIGGER <<Table>>_stateful_4_aft_update AFTER UPDATE ON <<Table>> FOR EACH ROW
 			BEGIN
+				DECLARE r varchar(256);
+					
+				# state_machine's remarks
+				IF NEW.state_remarks IS NOT NULL THEN
+					IF OLD.state_remarks IS NULL OR OLD.state_remarks <> NEW.state_remarks THEN
+						SET r = NEW.state_remarks;
+					END IF;
+				END IF;
 				IF OLD.machine_state IS NULL AND NOT NEW.machine_state IS NULL THEN
-					INSERT INTO state_log (entity,entity_id,created_at,updated_at,old_state,new_state,who) VALUES ('<<Table>>',NEW.ID,NEW.created_at,NEW.updated_at,NULL,NEW.machine_state,NEW.who);
+					INSERT INTO state_log (entity,entity_id,created_at,updated_at,old_state,new_state,remarks,who) VALUES ('<<Table>>',NEW.ID,NEW.created_at,NEW.updated_at,NULL,NEW.machine_state,r,NEW.who);
 				ELSEIF NOT OLD.machine_state IS NULL AND NOT NEW.machine_state IS NULL AND OLD.machine_state <> NEW.machine_state THEN
-					INSERT INTO state_log (entity,entity_id,created_at,updated_at,old_state,new_state,who) VALUES ('<<Table>>',NEW.ID,NEW.created_at,NEW.updated_at,OLD.machine_state,NEW.machine_state,NEW.who);
+					INSERT INTO state_log (entity,entity_id,created_at,updated_at,old_state,new_state,remarks,who) VALUES ('<<Table>>',NEW.ID,NEW.created_at,NEW.updated_at,OLD.machine_state,NEW.machine_state,r,NEW.who);
 				END IF;
 			END`,
 	}
@@ -484,6 +552,12 @@ func initStaticBehaviors() {
 			DECLARE tmpe   VARCHAR(512);
 			DECLARE tmps   VARCHAR(512);
 			DECLARE tmp    VARCHAR(128);
+
+			# check to validate if kind is being provided
+			IF NEW.machine_kind IS NULL OR NEW.machine_kind = '' THEN
+				SIGNAL SQLSTATE '45000'
+				SET MESSAGE_TEXT = 'State machine kind is missing during row insertion';
+			END IF;
 
 			# fetch state machine
 			SELECT default_state, entry_states, states INTO deft, entr, sts FROM state_machine WHERE entity = '<<Table>>' AND kind = NEW.machine_kind; 
@@ -531,6 +605,11 @@ func initStaticBehaviors() {
 			DECLARE tmps   VARCHAR(512);
 			DECLARE tmpn   VARCHAR(128);
 			DECLARE tmpt   VARCHAR(2048);
+
+			# check for state_remarks, remove stale remarks
+			IF NEW.state_remarks IS NULL OR NEW.state_remarks = '' OR NEW.state_remarks = OLD.state_remarks THEN
+				SET NEW.state_remarks = NULL;
+			END IF;
 			
 			# is a new state being set
 			IF NOT NEW.machine_state IS NULL THEN 
@@ -592,17 +671,32 @@ func initStaticBehaviors() {
 		// push inserts into entities to state-queue
 		`CREATE TRIGGER <<Table>>_stateful_kind_4_aft_insert AFTER INSERT ON <<Table>> FOR EACH ROW
 			BEGIN
+				DECLARE r varchar(256);
+					
+				# state_machine's remarks
+				IF NEW.state_remarks IS NOT NULL THEN
+					SET r = NEW.state_remarks;
+				END IF;
 				IF NOT NEW.machine_state IS NULL THEN
-					INSERT INTO state_log (entity,entity_id,created_at,updated_at,old_state,new_state,who) VALUES ('<<Table>>',NEW.ID,NEW.created_at,NEW.updated_at,NULL,NEW.machine_state,NEW.who);
+					INSERT INTO state_log (entity,entity_id,created_at,updated_at,old_state,new_state,remarks,who) VALUES ('<<Table>>',NEW.ID,NEW.created_at,NEW.updated_at,NULL,NEW.machine_state,r,NEW.who);
 				END IF;
 			END`,
 		// push updates of state machine to state-queue
 		`CREATE TRIGGER <<Table>>_stateful_kind_4_aft_update AFTER UPDATE ON <<Table>> FOR EACH ROW
 			BEGIN
+				DECLARE r varchar(256);
+						
+				# state_machine's remarks
+				IF NEW.state_remarks IS NOT NULL THEN
+					IF OLD.state_remarks IS NULL OR OLD.state_remarks <> NEW.state_remarks THEN
+						SET r = NEW.state_remarks;
+					END IF;
+				END IF;
+			
 				IF OLD.machine_state IS NULL AND NOT NEW.machine_state IS NULL THEN
-					INSERT INTO state_log (entity,entity_id,created_at,updated_at,old_state,new_state,who) VALUES ('<<Table>>',NEW.ID,NEW.created_at,NEW.updated_at,NULL,NEW.machine_state,NEW.who);
+					INSERT INTO state_log (entity,entity_id,created_at,updated_at,old_state,new_state,remarks,who) VALUES ('<<Table>>',NEW.ID,NEW.created_at,NEW.updated_at,NULL,NEW.machine_state,r,NEW.who);
 				ELSEIF NOT OLD.machine_state IS NULL AND NOT NEW.machine_state IS NULL AND OLD.machine_state <> NEW.machine_state THEN
-					INSERT INTO state_log (entity,entity_id,created_at,updated_at,old_state,new_state,who) VALUES ('<<Table>>',NEW.ID,NEW.created_at,NEW.updated_at,OLD.machine_state,NEW.machine_state,NEW.who);
+					INSERT INTO state_log (entity,entity_id,created_at,updated_at,old_state,new_state,remarks,who) VALUES ('<<Table>>',NEW.ID,NEW.created_at,NEW.updated_at,OLD.machine_state,NEW.machine_state,r,NEW.who);
 				END IF;
 			END`,
 	}
@@ -711,24 +805,49 @@ func initDynamicBehaviors() {
 	}
 
 	// SEO
-	behaveModel[Seo{}] = func(model interface{}) []string {
-		s := Seo{}
+	behaveModel[SeoField{}] = func(model interface{}) []string {
+		s := SeoField{}
+
+		urlRefModel, colToQuery, colToFetch := s.GetURLRef(model)
+
+		urlColumn := s.UrlColumn(model)
+
 		return []string{
 			`CREATE TRIGGER <<Table>>_seo_bfr_update BEFORE UPDATE ON <<Table>> FOR EACH ROW
 			BEGIN
+				DECLARE tmp VARCHAR(256);
+				DECLARE arr JSON;
+			
+				IF NEW.seo IS NOT NULL THEN
+					SET arr = JSON_EXTRACT(OLD.seo,'$.url_past');
+					IF arr IS NULL THEN 
+						SET arr = JSON_ARRAY();
+					END IF;
+					SET NEW.seo = JSON_SET(NEW.seo,"$.url_past",arr);
+				END IF;
+
 				IF NEW.url = '' THEN
 					SIGNAL SQLSTATE '45000'
-					SET MESSAGE_TEXT = '<<Table>>.Url cannot be updated to EMPTY';
+					SET MESSAGE_TEXT = 'URL cannot be updated to EMPTY';
 				END IF;
+
 				IF LEFT(NEW.url,1) <> '/' THEN
 					SET NEW.url = CONCAT('/', NEW.url);
 				END IF;
+
 				IF (OLD.url <> '') AND (NEW.url <> OLD.url) THEN
-					IF NEW.url_past IS NULL THEN
-						SET NEW.url_past = JSON_ARRAY();
+					IF NEW.seo IS NULL THEN
+						SET NEW.seo = JSON_OBJECT();
 					END IF;
-					IF JSON_CONTAINS(NEW.url_past, JSON_ARRAY(OLD.url)) = 0 THEN
-						SET NEW.url_past = JSON_ARRAY_APPEND(NEW.url_past, "$", OLD.url);
+					SET arr = JSON_EXTRACT(NEW.seo,'$.url_past');
+					IF arr IS NULL THEN
+						SET arr = JSON_ARRAY();
+						SET NEW.seo = JSON_MERGE_PRESERVE(NEW.seo,JSON_OBJECT("url_past",arr));
+					END IF;
+
+					IF JSON_CONTAINS(arr,JSON_ARRAY(OLD.url)) = 0 THEN
+						SET arr = JSON_ARRAY_APPEND(arr,"$",OLD.url);
+						SET NEW.seo = JSON_SET(NEW.seo,"$.url_past",arr);
 					END IF;
 				END IF;
 			END`,
@@ -737,24 +856,33 @@ func initDynamicBehaviors() {
 					DECLARE tmp VARCHAR(256);
 					DECLARE count INT DEFAULT 0;
 					DECLARE found INT DEFAULT 0;
-		
+					DECLARE urlRef VARCHAR(256);
+					
 					IF NEW.url = '' THEN
-						SET tmp = geturl(NEW.%s);
+						SET urlRef = '%s';
+						IF urlRef <> 'DUAL' THEN
+							SELECT %s INTO tmp FROM %s WHERE %s = NEW.%s LIMIT 1;
+						ELSE
+							SET tmp = New.%s; 
+						END IF;
+						SET tmp = geturl(tmp);
 						SET NEW.url = CONCAT('%s/', tmp);
 					END IF;
+					
 					IF LEFT(NEW.url,1) <> '/' THEN
 						SET NEW.url = CONCAT('/', NEW.url);
 					END IF;
-		
+					
 					SET found = (SELECT COUNT(*) FROM <<Table>> WHERE url = NEW.url);
 					WHILE found > 0 DO
 						SET count = count + 1;
-						IF NOT EXISTS (SELECT * FROM <<Table>> WHERE url = CONCAT(NEW.url,count)) THEN
-							SET NEW.url = CONCAT(NEW.url,count);
+						SET tmp = CONCAT('-',count);
+						IF NOT EXISTS (SELECT * FROM <<Table>> WHERE url = CONCAT(NEW.url,tmp)) THEN
+							SET NEW.url = CONCAT(NEW.url, tmp);
 							SET found = 0;
 						END IF;
 					END WHILE;
-				END`, s.UrlColumn(model), s.UrlPrefix(model)),
+				END`, urlRefModel, colToFetch, urlRefModel, colToQuery, urlColumn, urlColumn, s.UrlPrefix(model)),
 		}
 	}
 
