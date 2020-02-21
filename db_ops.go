@@ -144,7 +144,7 @@ func prepareData(data ...interface{}) map[string]string {
 		if temp, ok := data[0].(map[string]interface{}); ok {
 			inp = temp
 		} else if reflect.TypeOf(data[0]).Kind() == reflect.Struct {
-			b, err := json.Marshal(data[0])
+			b, err := json.MarshalIndent(data[0], "", " ")
 			if err != nil {
 				panic("can not convert struct to map")
 			}
@@ -195,7 +195,7 @@ func prepareData(data ...interface{}) map[string]string {
 			// If it is a slice, then try to encode it in a string
 			kind := reflect.TypeOf(v).Kind()
 			if kind == reflect.Slice || kind == reflect.Array {
-				b, err := json.Marshal(v)
+				b, err := json.MarshalIndent(v, "", " ")
 				if err != nil {
 					panic("could not convert array/slice to json format")
 				}
