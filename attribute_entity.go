@@ -29,7 +29,7 @@ type AttributeEntity struct {
 	Timed
 }
 
-// PreCommit performs the relavant checks before a txn gets commited
+// PreCommit performs the relevant checks before a txn gets commited
 func (a AttributeEntity) PreCommit() error {
 
 	// If data-type is bool, neither should enum nor unit be present
