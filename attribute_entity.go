@@ -66,6 +66,11 @@ func (a AttributeEntity) PreCommit() error {
 		}
 	}
 
+	// Check for multi_select field; a multi_Select can only be set incase of an enum
+	if a.MultiSelect != nil && *a.MultiSelect != 0 && a.Enums == nil {
+		return fmt.Errorf("multi_select can only be set with enums")
+	}
+
 	return nil
 }
 
