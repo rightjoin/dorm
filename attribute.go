@@ -50,7 +50,7 @@ func (a Attribute) Accepts(inp string) (interface{}, error) {
 			}
 
 			if !found {
-				return nil, fmt.Errorf("Innput %s must be one of enums defined", inp)
+				return nil, fmt.Errorf("Input %s must be one of enums defined", inp)
 			}
 		}
 

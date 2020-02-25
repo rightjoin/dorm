@@ -150,7 +150,7 @@ func AttributeValidate(modl interface{}, data map[string]string, action string) 
 		// type of input value
 		item, err := attr.Accepts(val)
 		if err != nil {
-			return false, errors.Errorf("the attribute_article for Key: %s, Value: %s, Error: %s", code, val, err)
+			return false, errors.Errorf("the attribute_entity for Key: %s, Value: %s, Error: %s", code, val, err)
 		}
 
 		return item, nil
