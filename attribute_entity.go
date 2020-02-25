@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"reflect"
 	"strings"
 	"sync"
 
@@ -26,6 +27,51 @@ type AttributeEntity struct {
 	Historic
 	WhosThat
 	Timed
+}
+
+// PreCommit performs the relevant checks before a txn gets commited
+func (a AttributeEntity) PreCommit() error {
+
+	// If data-type is bool, neither should enum nor unit be present
+	if a.Datatype == "bool" {
+
+		// Check if enums exist too
+		if a.Enums != nil {
+			return fmt.Errorf("in-case of bool data-type, enum must not be present")
+		}
+
+		// check for units too
+		if a.Units != nil {
+			return fmt.Errorf("in-case of bool data-type, units must not be present")
+		}
+	}
+
+	// both the enums and units cannot be defined at the same time
+	if a.Enums != nil && a.Units != nil {
+		return fmt.Errorf("both enums and units cannot not be present together")
+	}
+
+	// validate each enum to tally with its defined datatype
+	if a.Enums != nil {
+		for _, val := range *a.Enums {
+			valType := reflect.TypeOf(val)
+
+			if (a.Datatype == "int" || a.Datatype == "decimal") && valType.Kind() == reflect.String {
+				return fmt.Errorf("mismatched enum types found: %v Expected: %s", valType.Kind(), a.Datatype)
+			}
+
+			if (a.Datatype == "string") && valType.Kind() != reflect.String {
+				return fmt.Errorf("mismatched enum types found: %v Expected: %s", valType.Kind(), a.Datatype)
+			}
+		}
+	}
+
+	// Check for multi_select field; a multi_Select can only be set incase of an enum
+	if a.MultiSelect != nil && *a.MultiSelect != 0 && a.Enums == nil {
+		return fmt.Errorf("multi_select can only be set with enums")
+	}
+
+	return nil
 }
 
 func (a AttributeEntity) Triggers() []string {
