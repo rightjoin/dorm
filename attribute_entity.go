@@ -2,12 +2,12 @@ package dorm
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"reflect"
 	"strings"
 	"sync"
 
+	"github.com/pkg/errors"
 	"github.com/rightjoin/rutl/conv"
 	"github.com/rightjoin/rutl/refl"
 )
@@ -150,7 +150,7 @@ func AttributeValidate(modl interface{}, data map[string]string, action string) 
 		// type of input value
 		item, err := attr.Accepts(val)
 		if err != nil {
-			return false, err
+			return false, errors.Errorf("the attribute_article for Key: %s, Value: %s, Error: %s", code, val, err)
 		}
 
 		return item, nil
@@ -187,7 +187,7 @@ func AttributeValidate(modl interface{}, data map[string]string, action string) 
 
 					item, err := validateReturnItem(key, fmt.Sprint(val), sql)
 					if err != nil {
-						return false, err
+						return false, errors.Wrap(err, "Attribute_entity validation failed")
 					}
 
 					collated[key] = item
@@ -209,7 +209,7 @@ func AttributeValidate(modl interface{}, data map[string]string, action string) 
 
 			item, err := validateReturnItem(code, val, "info")
 			if err != nil {
-				return false, err
+				return false, errors.Wrap(err, "Attribute_entity validation failed")
 			}
 
 			// all good, so lets collate "property" part of info.property
