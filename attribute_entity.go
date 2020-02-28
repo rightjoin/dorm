@@ -32,6 +32,16 @@ type AttributeEntity struct {
 // PreCommit performs the relevant checks before a txn gets commited
 func (a AttributeEntity) PreCommit() error {
 
+	// validate entity
+	entityMap, err := GetInfoEntities()
+	if err != nil {
+		return fmt.Errorf("validating attribute_entity failed: %v", err)
+	}
+
+	if _, ok := entityMap[a.Entity]; !ok {
+		return fmt.Errorf("atrribute_entity validation failed, invalid enity: %s", a.Entity)
+	}
+
 	// If data-type is bool, neither should enum nor unit be present
 	if a.Datatype == "bool" {
 
@@ -72,6 +82,33 @@ func (a AttributeEntity) PreCommit() error {
 	}
 
 	return nil
+}
+
+// GetInfoEntities returns a map of tables with "info" as the column name.
+func GetInfoEntities() (map[string]bool, error) {
+	dbo := GetORM(false)
+
+	rows, err := dbo.Raw("SELECT DISTINCT TABLE_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE COLUMN_NAME IN ('info') AND TABLE_SCHEMA=?", GetMasterDatabaseName()).Rows()
+
+	if err != nil {
+		return nil, err
+	}
+
+	out := map[string]bool{}
+
+	for rows.Next() {
+		var tableName string
+
+		err = rows.Scan(&tableName)
+		if err != nil {
+			return nil, err
+		}
+		if len(strings.Trim(tableName, " ")) > 0 && tableName != "" {
+			out[tableName] = true
+		}
+	}
+
+	return out, nil
 }
 
 func (a AttributeEntity) Triggers() []string {

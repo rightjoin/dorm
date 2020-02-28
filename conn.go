@@ -118,6 +118,12 @@ func GetCstrConfig(engine string, container ...string) string {
 	}
 }
 
+// GetMasterDatabaseName returns the name of the master-database, reading it
+// from the config.
+func GetMasterDatabaseName() string {
+	return fig.String("database.master.db")
+}
+
 func GetCstr(engine string, prop map[string]interface{}) (cstr string) {
 
 	switch engine {
