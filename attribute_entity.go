@@ -2,11 +2,12 @@ package dorm
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
+	"reflect"
 	"strings"
 	"sync"
 
+	"github.com/pkg/errors"
 	"github.com/rightjoin/rutl/conv"
 	"github.com/rightjoin/rutl/refl"
 )
@@ -26,6 +27,88 @@ type AttributeEntity struct {
 	Historic
 	WhosThat
 	Timed
+}
+
+// PreCommit performs the relevant checks before a txn gets commited
+func (a AttributeEntity) PreCommit() error {
+
+	// validate entity
+	entityMap, err := GetInfoEntities()
+	if err != nil {
+		return fmt.Errorf("validating attribute_entity failed: %v", err)
+	}
+
+	if _, ok := entityMap[a.Entity]; !ok {
+		return fmt.Errorf("atrribute_entity validation failed, invalid enity: %s", a.Entity)
+	}
+
+	// If data-type is bool, neither should enum nor unit be present
+	if a.Datatype == "bool" {
+
+		// Check if enums exist too
+		if a.Enums != nil {
+			return fmt.Errorf("in-case of bool data-type, enum must not be present")
+		}
+
+		// check for units too
+		if a.Units != nil {
+			return fmt.Errorf("in-case of bool data-type, units must not be present")
+		}
+	}
+
+	// both the enums and units cannot be defined at the same time
+	if a.Enums != nil && a.Units != nil {
+		return fmt.Errorf("both enums and units cannot not be present together")
+	}
+
+	// validate each enum to tally with its defined datatype
+	if a.Enums != nil {
+		for _, val := range *a.Enums {
+			valType := reflect.TypeOf(val)
+
+			if (a.Datatype == "int" || a.Datatype == "decimal") && valType.Kind() == reflect.String {
+				return fmt.Errorf("mismatched enum types found: %v Expected: %s", valType.Kind(), a.Datatype)
+			}
+
+			if (a.Datatype == "string") && valType.Kind() != reflect.String {
+				return fmt.Errorf("mismatched enum types found: %v Expected: %s", valType.Kind(), a.Datatype)
+			}
+		}
+	}
+
+	// Check for multi_select field; a multi_Select can only be set incase of an enum
+	if a.MultiSelect != nil && *a.MultiSelect != 0 && a.Enums == nil {
+		return fmt.Errorf("multi_select can only be set with enums")
+	}
+
+	return nil
+}
+
+// GetInfoEntities returns a map of tables with "info" as the column name.
+func GetInfoEntities() (map[string]bool, error) {
+	dbo := GetORM(false)
+
+	rows, err := dbo.Raw("SELECT DISTINCT TABLE_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE COLUMN_NAME IN ('info') AND TABLE_SCHEMA=?", GetMasterDatabaseName()).Rows()
+
+	if err != nil {
+		return nil, err
+	}
+
+	out := map[string]bool{}
+
+	for rows.Next() {
+		var tableName string
+
+		err = rows.Scan(&tableName)
+		if err != nil {
+			return nil, err
+		}
+		if len(strings.Trim(tableName, " ")) > 0 && tableName != "" {
+			out[tableName] = true
+		}
+	}
+
+	return out, nil
 }
 
 func (a AttributeEntity) Triggers() []string {
@@ -104,7 +187,7 @@ func AttributeValidate(modl interface{}, data map[string]string, action string) 
 		// type of input value
 		item, err := attr.Accepts(val)
 		if err != nil {
-			return false, err
+			return false, errors.Errorf("the attribute_entity for Key: %s, Value: %s, Error: %s", code, val, err)
 		}
 
 		return item, nil
@@ -141,7 +224,7 @@ func AttributeValidate(modl interface{}, data map[string]string, action string) 
 
 					item, err := validateReturnItem(key, fmt.Sprint(val), sql)
 					if err != nil {
-						return false, err
+						return false, errors.Wrap(err, "Attribute_entity validation failed")
 					}
 
 					collated[key] = item
@@ -163,7 +246,7 @@ func AttributeValidate(modl interface{}, data map[string]string, action string) 
 
 			item, err := validateReturnItem(code, val, "info")
 			if err != nil {
-				return false, err
+				return false, errors.Wrap(err, "Attribute_entity validation failed")
 			}
 
 			// all good, so lets collate "property" part of info.property
