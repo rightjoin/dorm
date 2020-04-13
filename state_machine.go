@@ -184,7 +184,7 @@ type StateLog struct {
 	Timed
 	ProcessedAt *time.Time `sql:"null" json:"processed_at" index:"true"`
 	Error       *uint8     `sql:"TYPE:tinyint(1) unsigned;null" json:"error"`
-	Attempt     *uint8     `sql:"TYPE:tinyint(1) unsigned;null" json:"attemp"`
+	Retry     *uint8     `sql:"TYPE:tinyint(1) unsigned;null" json:"retry"`
 	WhosThat
 }
 
