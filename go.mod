@@ -15,7 +15,7 @@ require (
 	github.com/lib/pq v1.3.0 // indirect
 	github.com/mattn/go-sqlite3 v2.0.2+incompatible // indirect
 	github.com/pkg/errors v0.9.1
-	github.com/rightjoin/fig v0.0.0-20191218064823-c84a43a606cd
+	github.com/rightjoin/fig v0.0.0-20200417105747-d0255935192a
 	github.com/rightjoin/rlog v0.0.0-20200127045643-caf92f834678
 	github.com/rightjoin/rutl v0.0.0-20190429034327-6ccca6b49792
 	github.com/stretchr/objx v0.2.0 // indirect

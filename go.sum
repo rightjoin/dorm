@@ -269,6 +269,8 @@ github.com/rcrowley/go-metrics v0.0.0-20181016184325-3113b8401b8a/go.mod h1:bCqn
 github.com/rcrowley/go-metrics v0.0.0-20190826022208-cac0b30c2563/go.mod h1:bCqnVzQkZxMG4s8nGwiZ5l3QUCyqpo9Y+/ZMZ9VjZe4=
 github.com/rightjoin/fig v0.0.0-20191218064823-c84a43a606cd h1:FVLdjgw7QM72oLP77J50CW1aJ/cfuwbhxiCtoIoi3Yw=
 github.com/rightjoin/fig v0.0.0-20191218064823-c84a43a606cd/go.mod h1:avs+QZpsb+AlgyqG70EItSPfuX3NQvjE8mNJCFUDf/E=
+github.com/rightjoin/fig v0.0.0-20200417105747-d0255935192a h1:pr4YZPCu91b7GVMXDRF3YMruEZpd1o7/8tFtOkgS2XQ=
+github.com/rightjoin/fig v0.0.0-20200417105747-d0255935192a/go.mod h1:avs+QZpsb+AlgyqG70EItSPfuX3NQvjE8mNJCFUDf/E=
 github.com/rightjoin/rlog v0.0.0-20190322103338-552cadac61e6 h1:pB5vVQHBVEehORXweKSgi74DUkOdXhW02TCC68tpsyg=
 github.com/rightjoin/rlog v0.0.0-20190322103338-552cadac61e6/go.mod h1:1upL/SRqoNrCFO1r1Old1JjeSiIzQihypAy6cB0zClQ=
 github.com/rightjoin/rlog v0.0.0-20200127045643-caf92f834678 h1:17LhdeD7QFnQOQJNUxJKSfxRY6O9QkDFp59ifY8OuQI=

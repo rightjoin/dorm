@@ -107,13 +107,14 @@ func NewMedia(f multipart.File, fh *multipart.FileHeader, entity, field string, 
 
 	directory = fig.StringOr("./media", "media.folder")
 
-	// For S3 upload we only need folder-prefix/<model-name>/.... as path
-	s3Path := path[strings.Index(path, directory)+len(directory):]
-
-	log.Info("Uploading Media", "S3_path", s3Path, "directory", directory)
 	// Upload to S3
 	uploadToS3 := fig.BoolOr(false, "media.s3.upload")
 	if uploadToS3 {
+		// for S3 upload we only need folder-prefix/<model-name>/.... as path
+		s3Path := path[strings.Index(path, directory)+len(directory):]
+
+		log.Info("Uploading media to s3", "s3_path", s3Path, "directory", directory)
+
 		if err = UploadToS3(buf.Bytes(), s3Path, md.Mime, fsize); err != nil {
 			return nil, err
 		}

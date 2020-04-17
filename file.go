@@ -4,8 +4,12 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
+	"io/ioutil"
 	"net/http"
+	"os"
+	"strings"
 
+	"github.com/rightjoin/fig"
 	log "github.com/rightjoin/rlog"
 	"github.com/rightjoin/rutl/conv"
 
@@ -82,6 +86,24 @@ func SaveAndGetAnyFile(req *http.Request, post map[string]string, model interfac
 func SaveAnyFile(req *http.Request, post map[string]string, model interface{}) error {
 	_, e := SaveAndGetAnyFile(req, post, model)
 	return e
+}
+
+func (f *File) Read() ([]byte, error) {
+
+	directory := fig.StringOr("./media", "media.folder")
+
+	if !strings.HasSuffix(directory, "/") {
+		directory += "/"
+	}
+
+	path := directory + f.Src
+
+	_, err := os.Stat(path)
+	if err != nil { // -> file does not exist
+		return nil, err
+	}
+
+	return ioutil.ReadFile(path)
 }
 
 func (p *File) Value() (driver.Value, error) {
