@@ -4,7 +4,7 @@ go 1.12
 
 require (
 	github.com/asaskevich/govalidator v0.0.0-20200108200545-475eaeb16496
-	github.com/aws/aws-sdk-go v1.28.9
+	github.com/aws/aws-sdk-go v1.30.7
 	github.com/azer/snakecase v1.0.0 // indirect
 	github.com/creack/pty v1.1.9 // indirect
 	github.com/denisenkom/go-mssqldb v0.0.0-20191128021309-1d7a30a10f73 // indirect
@@ -16,10 +16,10 @@ require (
 	github.com/mattn/go-sqlite3 v2.0.2+incompatible // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/rightjoin/fig v0.0.0-20200417105747-d0255935192a
-	github.com/rightjoin/rlog v0.0.0-20200127045643-caf92f834678
 	github.com/rightjoin/rutl v0.0.0-20190429034327-6ccca6b49792
+	github.com/rightjoin/slog v0.0.0-20200420173719-5b18811b496f
 	github.com/stretchr/objx v0.2.0 // indirect
-	github.com/stretchr/testify v1.4.0
+	github.com/stretchr/testify v1.5.1
 	golang.org/x/crypto v0.0.0-20200117160349-530e935923ad // indirect
 	golang.org/x/mod v0.2.0 // indirect
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e // indirect

@@ -16,7 +16,7 @@ import (
 	"strings"
 
 	"github.com/rightjoin/fig"
-	log "github.com/rightjoin/rlog"
+	log "github.com/rightjoin/slog"
 )
 
 type Media struct {

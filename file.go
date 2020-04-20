@@ -10,8 +10,8 @@ import (
 	"strings"
 
 	"github.com/rightjoin/fig"
-	log "github.com/rightjoin/rlog"
 	"github.com/rightjoin/rutl/conv"
+	log "github.com/rightjoin/slog"
 
 	"github.com/rightjoin/rutl/refl"
 )

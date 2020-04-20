@@ -16,8 +16,8 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/rightjoin/fig"
-	log "github.com/rightjoin/rlog"
 	rip "github.com/rightjoin/rutl/ip"
+	log "github.com/rightjoin/slog"
 )
 
 type SQLMigrationTask struct {
