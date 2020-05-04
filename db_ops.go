@@ -184,7 +184,7 @@ func prepareData(data ...interface{}) map[string]string {
 		case float64:
 			mStr[k] = strconv.FormatFloat(val, 'f', -1, 64)
 		case time.Time:
-			mStr[k] = val.Format("2006-01-02T15:04:05.999999 -0700")
+			mStr[k] = val.Format("2006-01-02 15:04:05.999999")
 			//mStr[k] = val.Format(time.RFC3339)
 		case bool:
 			if val {
