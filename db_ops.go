@@ -194,6 +194,23 @@ func prepareData(data ...interface{}) map[string]string {
 		default:
 			// If it is a slice, then try to encode it in a string
 			kind := reflect.TypeOf(v).Kind()
+			vref := reflect.ValueOf(v)
+			set := false
+
+			for kind == reflect.Ptr {
+				if vref.IsNil() {
+					mStr[k] = NullString
+					set = true
+					break
+				}
+				vref = vref.Elem()
+				kind = vref.Type().Kind()
+			}
+
+			if set {
+				continue
+			}
+
 			if kind == reflect.Slice || kind == reflect.Array {
 				b, err := json.MarshalIndent(v, "", " ")
 				if err != nil {
@@ -340,6 +357,8 @@ func buildInsertSql(tbl string, inp map[string]string) (string, []interface{}) {
 			params = append(params, val)
 		}
 	}
+	fmt.Println(fmt.Sprintf("INSERT INTO `%s` (%s) VALUES (%s)", tbl, keys, vals), params)
+
 	return fmt.Sprintf("INSERT INTO `%s` (%s) VALUES (%s)", tbl, keys, vals), params
 }
 
