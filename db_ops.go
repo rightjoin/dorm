@@ -205,16 +205,17 @@ func prepareData(data ...interface{}) map[string]string {
 				}
 				vref = vref.Elem()
 				kind = vref.Type().Kind()
+				v = vref.Interface()
 			}
 
 			if set {
 				continue
 			}
 
-			if kind == reflect.Slice || kind == reflect.Array {
-				b, err := json.MarshalIndent(v, "", " ")
+			if kind == reflect.Slice || kind == reflect.Array || kind == reflect.Map || kind == reflect.Struct {
+				b, err := json.Marshal(v)
 				if err != nil {
-					panic("could not convert array/slice to json format")
+					panic("could not convert array/slice/map/struct to json")
 				}
 				mStr[k] = string(b)
 			} else {
