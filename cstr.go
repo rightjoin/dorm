@@ -38,3 +38,16 @@ func (m MysqlConn) CStr() string {
 		url.QueryEscape(m.Timezone),
 	)
 }
+
+type PgConn struct {
+	Host     string
+	Port     int
+	Db       string
+	Username string
+	Password string
+}
+
+func (p PgConn) CStr() string {
+	return fmt.Sprintf("host=%s port=%d user=%s dbname=%s password=%s sslmode=disable",
+		p.Host, p.Port, p.Username, p.Db, p.Password)
+}

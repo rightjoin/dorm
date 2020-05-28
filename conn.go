@@ -113,6 +113,11 @@ func GetCstrConfig(engine string, container ...string) string {
 			"timeout":      my.ConnTimeout,
 		})
 
+	case "postgres", "postgre":
+		p := PgConn{}
+		fig.Struct(&p, parent)
+		return p.CStr()
+
 	default:
 		panic("unsupported db engine:" + engine)
 	}
