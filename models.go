@@ -13,15 +13,15 @@ type PKey struct {
 }
 
 type UID10 struct {
-	UID string `sql:"TYPE:varchar(10);not null;DEFAULT:'';" json:"uid" unique:"true" insert:"no" update:"no"`
+	UID string `sql:"TYPE:varchar(10) binary;not null;DEFAULT:'';" json:"uid" unique:"true" insert:"no" update:"no"`
 }
 
 type UID8 struct {
-	UID string `sql:"TYPE:varchar(8);not null;DEFAULT:'';" json:"uid" unique:"true" insert:"no" update:"no"`
+	UID string `sql:"TYPE:varchar(8) binary;not null;DEFAULT:'';" json:"uid" unique:"true" insert:"no" update:"no"`
 }
 
 type UID16 struct {
-	UID string `sql:"TYPE:varchar(16);not null;DEFAULT:'';" json:"uid" unique:"true" insert:"no" update:"no"`
+	UID string `sql:"TYPE:varchar(16) binary;not null;DEFAULT:'';" json:"uid" unique:"true" insert:"no" update:"no"`
 }
 
 type Timed struct {
