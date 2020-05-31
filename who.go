@@ -2,6 +2,7 @@ package dorm
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"strings"
@@ -60,13 +61,21 @@ func WhoMap(r *http.Request) map[string]interface{} {
 	return who
 }
 
-func WhoProc(script string) string {
+func WhoProc(script string, kv ...interface{}) string {
 	host, _ := os.Hostname()
 
 	m := map[string]interface{}{
 		"script":   script,
 		"hostname": host,
 		"ip":       ip.GetLocal(),
+	}
+
+	for i := 0; i < len(kv); i = i + 2 {
+		j := i + 1
+		k := fmt.Sprintf("%v", kv[i])
+		if j < len(kv) {
+			m[k] = kv[j]
+		}
 	}
 
 	// serialize who
