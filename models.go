@@ -24,6 +24,14 @@ type UID16 struct {
 	UID string `sql:"TYPE:varchar(16) binary;not null;DEFAULT:'';" json:"uid" unique:"true" insert:"no" update:"no"`
 }
 
+type UID24 struct {
+	UID string `sql:"TYPE:varchar(24) binary;not null;DEFAULT:'';" json:"uid" unique:"true" insert:"no" update:"no"`
+}
+
+type UID32 struct {
+	UID string `sql:"TYPE:varchar(32) binary;not null;DEFAULT:'';" json:"uid" unique:"true" insert:"no" update:"no"`
+}
+
 type Timed struct {
 	CreatedAt time.Time `sql:"TYPE:datetime;not null;DEFAULT:current_timestamp" json:"created_at" insert:"no" update:"no"`
 	UpdatedAt time.Time `sql:"TYPE:datetime;not null;DEFAULT:current_timestamp" json:"updated_at" insert:"no" update:"no" index:"true"`

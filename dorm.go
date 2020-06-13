@@ -16,6 +16,30 @@ func init() {
 
 func initStaticBehaviors() {
 
+	// UID32
+	behave[UID32{}] = []string{
+		`CREATE TRIGGER <<Table>>_uid32_bfr_insert BEFORE INSERT ON <<Table>> FOR EACH ROW
+			IF NEW.uid IS NULL OR NEW.uid = '' THEN 
+				SET @id = 1;
+				WHILE (@id IS NOT NULL) DO
+					SET NEW.uid = randstr(32);
+					SET @id = (SELECT id FROM <<Table>> WHERE uid = NEW.uid);
+				END WHILE;
+			END IF;`,
+	}
+
+	// UID24
+	behave[UID24{}] = []string{
+		`CREATE TRIGGER <<Table>>_uid24_bfr_insert BEFORE INSERT ON <<Table>> FOR EACH ROW
+			IF NEW.uid IS NULL OR NEW.uid = '' THEN 
+				SET @id = 1;
+				WHILE (@id IS NOT NULL) DO
+					SET NEW.uid = randstr(24);
+					SET @id = (SELECT id FROM <<Table>> WHERE uid = NEW.uid);
+				END WHILE;
+			END IF;`,
+	}
+
 	// UID16
 	behave[UID16{}] = []string{
 		`CREATE TRIGGER <<Table>>_uid16_bfr_insert BEFORE INSERT ON <<Table>> FOR EACH ROW
