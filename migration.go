@@ -12,41 +12,38 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/pkg/errors"
 	"github.com/rightjoin/fig"
 	rip "github.com/rightjoin/rutl/ip"
-	log "github.com/rightjoin/slog"
+	"github.com/rightjoin/slog"
 )
 
-type SQLMigrationTask struct {
+type SQLMigration struct {
 	PKey
 
-	Filename string `sql:"VARCHAR(128);not null" unique:"true" insert:"must" update:"false" json:"filename"`
+	Filename string `sql:"varchar(128);not null" unique:"true" insert:"must" update:"false" json:"filename"`
 
 	// Set it to 1, incase you need to run the sql from the same file again.
 	// Reduces the need for creating/renaming a file incase of any syntactical errors.
 	ReRun uint `sql:"tinyint(1);unsigned;DEFAULT:0" json:"re_run"`
 
-	Remarks string `sql:"varchar(256)" json:"remarks"`
+	Success uint   `sql:"tinyint(1);unsigned;DEFAULT:0" json:"success"`
+	Message string `sql:"varchar(256);DEFAULT:''" json:"message"`
 
 	// Behaviours
+	Historic
 	WhosThat
-	Timed4
+	Timed
 }
-
-const (
-	sqlMigrationRLogMessage = "Running SQL Migration"
-)
 
 // RunMigration kicks off the migration task; picking and executing sql files present
 // inside the directory mentioned in the config under the key
-// sql-migration:
-//		dir: # defaults to ./migration
+// database:
+//		sql-folder: defaults to ./sql
 func RunMigration() {
 
-	dir := fig.StringOr("./migration", "sql-migration.dir")
+	dir := fig.StringOr("./sql", "database.sql-folder")
 	fInfo := make([]os.FileInfo, 0)
 
 	// Collect all the files present inside the migration directory
@@ -55,7 +52,7 @@ func RunMigration() {
 		return
 	}
 	if len(fInfo) == 0 {
-		log.Info(sqlMigrationRLogMessage, "NO sql files found under dir ", dir)
+		slog.Info("sql: No scripts found", "folder", dir)
 		return
 	}
 
@@ -71,86 +68,102 @@ func RunMigration() {
 
 	filesToExecute, err := getFilesToExecute(files)
 	if err != nil {
-		log.Error(sqlMigrationRLogMessage, "Error", err)
+		slog.Error("sql: Error detecting scripts to execute", "error", err)
 		return
 	}
 
 	if len(filesToExecute) == 0 {
-		log.Info(sqlMigrationRLogMessage, "Msg", "No new files found")
+		slog.Info("sql: No (new) scripts to execute :)")
 		return
 	}
 
-	otp := func(min, max int) string {
+	genOtp := func(min, max int) string {
 		return strconv.Itoa(rand.Intn(max-min) + min)
 	}
 
 	db := GetORM(true)
 	for _, file := range filesToExecute {
 
-		code := otp(1000, 10000)
 		path := fmt.Sprintf("%s/%s", dir, file)
 		data, err := ioutil.ReadFile(path)
 		if err != nil {
-			log.Info(sqlMigrationRLogMessage, "File", path, "Error", err)
+			slog.Error("sql: Unable to read file", "filepath", path, "error", err)
 			continue
 		}
 
-		query := string(data)
+		queries := string(data)
 		skipFile := false
 
-		log.Info(sqlMigrationRLogMessage, "file-name", file, "query", query)
-		if strings.Contains(strings.ToLower(query), "delete") {
+		slog.Info("sql: Processing...", "filepath", path, "data", queries)
 
-			fmt.Println("Restricted keyword DELETE found in file: " + file)
+		// Does the file contain restricted keywords?
+		restricted := []string{"delete", "drop"}
+		containsRestricted := func() bool {
+			out := false
+			queriesLower := strings.ToLower(queries)
+			for _, keyword := range restricted {
+				out = strings.Contains(queriesLower, keyword)
+				if out {
+					return out
+				}
+			}
+			return out
+		}()
+
+		// If yes, then get explicit consent
+		if containsRestricted {
+
+			code := genOtp(1000, 10000)
+			fmt.Println("Restricted keywords found in file: ", file, ". To continue enter:", code)
 
 			reader := bufio.NewReader(os.Stdin)
-			fmt.Println("Are you sure you want to continue ?? ( Type:", code, ")")
 			input, _ := reader.ReadString('\n')
 
 			if strings.TrimSpace(input) != code {
-				fmt.Println("Incorrect entry. Ignoring file " + file)
+				fmt.Println("Incorrect entry. Skipping file: " + file)
 
 				skipFile = true
-				err = errors.Errorf("skipping file %s, contains restricted keyword DELETE", file)
+				err = errors.Errorf("Skipped file %s due to OTP mismatch", file)
 			}
 		}
 
 		if !skipFile {
-			err = db.Exec(query).Error
+			err = db.Exec(queries).Error
 		}
 
+		status := "Success"
+		statusInt := 1
 		if err != nil {
-			log.Info(sqlMigrationRLogMessage, "file-name", file, "status", "Failed", "Error", err)
+			status = "Failed"
+			statusInt = 0
+		}
+		slog.Info("sql: Execution status", "filename", file, "status", status, "error", err)
+
+		errDb := db.Where("filename = ?", file).Find(&SQLMigration{}).Error
+		rowExists := false
+		if errDb == nil {
+			rowExists = true
+		}
+
+		message := ""
+		if err != nil {
+			message = err.Error()
+		}
+
+		whoData := WhoProc("sql migration", "mac_address", macUint64(), "ip", rip.GetLocal())
+
+		if rowExists {
+			// Update
+			errDb = Update(db, "filename", file, &SQLMigration{}, "re_run", 0, "success", statusInt, "message", message, "who", whoData)
 		} else {
-			log.Info(sqlMigrationRLogMessage, "file-name", file, "status", "Success")
+			// Insert
+			errDb = Insert(db, &SQLMigration{}, "filename", file, "re_run", 0, "success", statusInt, "message", message, "who", whoData)
 		}
 
-		who := map[string]interface{}{
-			"MacAddress": macUint64(),
-			"IP":         rip.GetLocal(),
-		}
-
-		s := SQLMigrationTask{
-			Filename: file,
-			ReRun:    0,
-			WhosThat: WhosThat{Who: NewJDoc2(who)},
-			Timed4: Timed4{
-				CreatedAt: time.Now(),
-				UpdatedAt: time.Now(),
-			},
-			Remarks: "Success",
-		}
-
-		if err != nil {
-			s.Remarks = err.Error()
-		}
-
-		err = db.Where("filename = ?", file).FirstOrCreate(&s).Assign(SQLMigrationTask{ReRun: 0, Timed4: Timed4{UpdatedAt: time.Now()}, Remarks: s.Remarks, WhosThat: s.WhosThat}).Error
-		if err != nil {
-			log.Info(sqlMigrationRLogMessage, "File", path, "Update Status Failed", err)
+		if errDb != nil {
+			slog.Error("sql: DB update failed", "filepath", path, "error", errDb, "exists", rowExists)
 		}
 	}
-
 }
 
 // getFilesToExecute takes in the list of files that are present in the migration
@@ -159,16 +172,17 @@ func RunMigration() {
 func getFilesToExecute(files []string) ([]string, error) {
 	db := GetORM(true)
 
-	isPresent := db.HasTable(&SQLMigrationTask{})
+	isPresent := db.HasTable(&SQLMigration{})
 	if !isPresent {
-		db.CreateTable(&SQLMigrationTask{})
+
+		BuildSchema(&SQLMigration{})
 
 		// Since, the environment seems new, all the files present need
 		// to be executed.
 		return files, nil
 	}
 
-	executedTasks := []SQLMigrationTask{}
+	executedTasks := []SQLMigration{}
 
 	err := db.Where("filename IN (?) OR re_run = 1", files).Find(&executedTasks).Error
 	if err != nil {
@@ -180,11 +194,11 @@ func getFilesToExecute(files []string) ([]string, error) {
 	}
 
 	newFiles := []string{}
-	aleadyRunMap := make(map[string]bool)
+	alreadyRunMap := make(map[string]bool)
 	reRun := make(map[string]bool)
 
 	for _, val := range executedTasks {
-		aleadyRunMap[val.Filename] = true
+		alreadyRunMap[val.Filename] = true
 		if val.ReRun == 1 {
 			reRun[val.Filename] = true
 		}
@@ -192,7 +206,7 @@ func getFilesToExecute(files []string) ([]string, error) {
 
 	// collect either the new files or the files to be re_run
 	for _, file := range files {
-		if _, ok := aleadyRunMap[file]; !ok {
+		if _, ok := alreadyRunMap[file]; !ok {
 			newFiles = append(newFiles, file)
 			continue
 		}
@@ -208,7 +222,7 @@ func visit(files *[]os.FileInfo) filepath.WalkFunc {
 	return func(path string, info os.FileInfo, err error) error {
 
 		if err != nil {
-			log.Error(sqlMigrationRLogMessage, "Error", err)
+			slog.Error("sql: Cannot visit files", "error", err)
 			return err
 		}
 
