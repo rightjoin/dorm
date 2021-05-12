@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 	"github.com/rightjoin/fig"
 	rip "github.com/rightjoin/rutl/ip"
@@ -41,7 +42,7 @@ type SQLMigration struct {
 // inside the directory mentioned in the config under the key
 // database:
 //		sql-folder: defaults to ./sql
-func RunMigration() {
+func RunMigration(db *gorm.DB) {
 
 	dir := fig.StringOr("./sql", "database.sql-folder")
 	fInfo := make([]os.FileInfo, 0)
@@ -66,7 +67,7 @@ func RunMigration() {
 		files[i] = val.Name()
 	}
 
-	filesToExecute, err := getFilesToExecute(files)
+	filesToExecute, err := getFilesToExecute(db, files)
 	if err != nil {
 		slog.Error("sql: Error detecting scripts to execute", "error", err)
 		return
@@ -81,7 +82,6 @@ func RunMigration() {
 		return strconv.Itoa(rand.Intn(max-min) + min)
 	}
 
-	db := GetORM(true)
 	for _, file := range filesToExecute {
 
 		path := fmt.Sprintf("%s/%s", dir, file)
@@ -169,14 +169,10 @@ func RunMigration() {
 // getFilesToExecute takes in the list of files that are present in the migration
 // directory and checks which of the files have already been run or which of them
 // is required to be run again and returns such files list.
-func getFilesToExecute(files []string) ([]string, error) {
-	db := GetORM(true)
+func getFilesToExecute(db *gorm.DB, files []string) ([]string, error) {
 
 	isPresent := db.HasTable(&SQLMigration{})
 	if !isPresent {
-
-		BuildSchema(&SQLMigration{})
-
 		// Since, the environment seems new, all the files present need
 		// to be executed.
 		return files, nil

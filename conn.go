@@ -1,9 +1,7 @@
 package dorm
 
 import (
-	"fmt"
 	"math/rand"
-	"net/url"
 	"strings"
 
 	"github.com/jinzhu/gorm"
@@ -93,7 +91,7 @@ func GetORMCstr(engine string, conn string) *gorm.DB {
 	panic(e)
 }
 
-// GetCstrConfig reads the configuratin and returns the Cstr
+// GetCstrConfig reads the configuration and returns the Cstr
 func GetCstrConfig(engine string, container ...string) string {
 	parent := strings.Join(container, ".")
 
@@ -101,17 +99,7 @@ func GetCstrConfig(engine string, container ...string) string {
 	case "mysql":
 		my := MysqlConn{}
 		fig.Struct(&my, parent)
-		return GetCstr(engine, map[string]interface{}{
-			"username":     my.Username,
-			"password":     my.Password,
-			"host":         my.Host,
-			"port":         my.Port,
-			"db":           my.Db,
-			"timezone":     my.Timezone,
-			"readTimeout":  my.ReadTimeout,
-			"writeTimeout": my.WriteTimeout,
-			"timeout":      my.ConnTimeout,
-		})
+		return my.CStr()
 
 	case "postgres", "postgre":
 		p := PgConn{}
@@ -127,42 +115,4 @@ func GetCstrConfig(engine string, container ...string) string {
 // from the config.
 func GetMasterDatabaseName() string {
 	return fig.String("database.master.db")
-}
-
-func GetCstr(engine string, prop map[string]interface{}) (cstr string) {
-
-	switch engine {
-	case "mysql":
-		if timezone, ok := prop["timezone"]; !ok || timezone == "" {
-			prop["timezone"] = "UTC"
-		}
-		cstr = fmt.Sprintf("%s:%s@tcp(%s:%v)/%s?parseTime=true&loc=%s",
-			prop["username"], prop["password"],
-			prop["host"], prop["port"], prop["db"],
-			url.QueryEscape(prop["timezone"].(string)),
-		)
-
-		if readTimeout, ok := prop["readTimeout"]; ok && readTimeout != "" {
-			if !strings.ContainsAny(fmt.Sprint(readTimeout), "smh") {
-				panic("timeout must be mentioned alongwith m,s,ms or h time's unit suffix")
-			}
-			cstr += fmt.Sprintf("&readTimeout=%s", readTimeout)
-		}
-		if writeTimeout, ok := prop["writeTimeout"]; ok && writeTimeout != "" {
-			if !strings.ContainsAny(fmt.Sprint(writeTimeout), "smh") {
-				panic("timeout must be mentioned alongwith m,s,ms or h time's unit suffix")
-			}
-			cstr += fmt.Sprintf("&writeTimeout=%s", writeTimeout)
-		}
-		if timeout, ok := prop["timeout"]; ok && timeout != "" {
-			if !strings.ContainsAny(fmt.Sprint(timeout), "smh") {
-				panic("timeout must be mentioned alongwith m,s,ms or h time's unit suffix")
-			}
-			cstr += fmt.Sprintf("&timeout=%s", timeout)
-		}
-	default:
-		panic("blah blah!")
-	}
-
-	return
 }

@@ -3,6 +3,7 @@ package dorm
 import (
 	"fmt"
 	"net/url"
+	"strings"
 )
 
 type Connecter interface {
@@ -18,25 +19,46 @@ type MysqlConn struct {
 	Timezone     string `fig:"optional"`
 	ReadTimeout  string `fig:"optional"`
 	WriteTimeout string `fig:"optional"`
-	ConnTimeout  string `fig:"optional"`
+	Timeout      string `fig:"optional"`
 }
 
 // CStr returns the properly formatted connection
 // string to connect to mysql database
 func (m MysqlConn) CStr() string {
 
-	if m.Timezone == "" {
-		return fmt.Sprintf("%s:%s@tcp(%s:%d)/%s",
-			m.Username, m.Password,
-			m.Host, m.Port, m.Db,
-		)
+	var params = map[string]string{}
+
+	if m.Timezone != "" {
+		params["parseTime"] = "true"
+		params["loc"] = url.QueryEscape(m.Timezone)
 	}
 
-	return fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?parseTime=true&loc=%s",
+	if m.ReadTimeout != "" {
+		params["readTimeout"] = m.ReadTimeout
+	}
+
+	if m.WriteTimeout != "" {
+		params["writeTimeout"] = m.WriteTimeout
+	}
+
+	if m.Timeout != "" {
+		params["timeout"] = m.Timeout
+	}
+
+	cstr := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s",
 		m.Username, m.Password,
 		m.Host, m.Port, m.Db,
-		url.QueryEscape(m.Timezone),
 	)
+
+	if len(params) > 0 {
+		chunks := []string{}
+		for key, val := range params {
+			chunks = append(chunks, fmt.Sprintf("%s=%s", key, val))
+		}
+		cstr = cstr + "?" + strings.Join(chunks, "&")
+	}
+
+	return cstr
 }
 
 type PgConn struct {
