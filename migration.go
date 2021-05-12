@@ -38,11 +38,11 @@ type SQLMigration struct {
 	Timed
 }
 
-// DoMigration kicks off the migration task; picking and executing sql files present
+// RunMigration kicks off the migration task; picking and executing sql files present
 // inside the directory mentioned in the config under the key
 // database:
 //		sql-folder: defaults to ./sql
-func DoMigration(db *gorm.DB) {
+func RunMigration(db *gorm.DB) {
 
 	dir := fig.StringOr("./sql", "database.sql-folder")
 	fInfo := make([]os.FileInfo, 0)
