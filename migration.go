@@ -30,7 +30,7 @@ type SQLMigration struct {
 	ReRun uint `sql:"tinyint(1);unsigned;DEFAULT:0" json:"re_run"`
 
 	Success uint   `sql:"tinyint(1);unsigned;DEFAULT:0" json:"success"`
-	Message string `sql:"varchar(256);DEFAULT:''" json:"message"`
+	Message string `sql:"varchar(512);DEFAULT:''" json:"message"`
 
 	// Behaviours
 	Historic
