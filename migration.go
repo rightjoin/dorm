@@ -17,7 +17,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rightjoin/fig"
 	rip "github.com/rightjoin/rutl/ip"
-	"github.com/rightjoin/slog"
+	"github.com/rs/zerolog/log"
 )
 
 type SQLMigration struct {
@@ -53,7 +53,9 @@ func RunMigration(db *gorm.DB) {
 		return
 	}
 	if len(fInfo) == 0 {
-		slog.Info("sql: No scripts found", "folder", dir)
+		log.Info().
+			Str("folder", dir).
+			Msg("sql: No scripts found")
 		return
 	}
 
@@ -69,12 +71,17 @@ func RunMigration(db *gorm.DB) {
 
 	filesToExecute, err := getFilesToExecute(db, files)
 	if err != nil {
-		slog.Error("sql: Error detecting scripts to execute", "error", err)
+		log.Error().
+			Err(err).
+			Msg("sql: Error detecting scripts to execute")
+
 		return
 	}
 
 	if len(filesToExecute) == 0 {
-		slog.Info("sql: No (new) scripts to execute :)")
+		log.Info().
+			Msg("sql: No (new) scripts to execute :)")
+
 		return
 	}
 
@@ -87,14 +94,20 @@ func RunMigration(db *gorm.DB) {
 		path := fmt.Sprintf("%s/%s", dir, file)
 		data, err := ioutil.ReadFile(path)
 		if err != nil {
-			slog.Error("sql: Unable to read file", "filepath", path, "error", err)
+			log.Error().
+				Str("filepath", path).
+				Err(err).
+				Msg("sql: Unable to read file")
 			continue
 		}
 
 		queries := string(data)
 		skipFile := false
 
-		slog.Info("sql: Processing...", "filepath", path, "data", queries)
+		log.Info().
+			Str("filepath", path).
+			Str("data", queries).
+			Msg("sql: Processing...")
 
 		// Does the file contain restricted keywords?
 		restricted := []string{"delete", "drop"}
@@ -137,7 +150,11 @@ func RunMigration(db *gorm.DB) {
 			status = "Failed"
 			statusInt = 0
 		}
-		slog.Info("sql: Execution status", "filename", file, "status", status, "error", err)
+		log.Info().
+			Str("filename", file).
+			Str("status", status).
+			AnErr("error", err).
+			Msg("sql: Execution status")
 
 		errDb := db.Where("filename = ?", file).Find(&SQLMigration{}).Error
 		rowExists := false
@@ -161,7 +178,11 @@ func RunMigration(db *gorm.DB) {
 		}
 
 		if errDb != nil {
-			slog.Error("sql: DB update failed", "filepath", path, "error", errDb, "exists", rowExists)
+			log.Error().
+				Str("filepath", path).
+				Err(errDb).
+				Bool("exists", rowExists).
+				Msg("sql: DB update failed")
 		}
 	}
 }
@@ -218,7 +239,9 @@ func visit(files *[]os.FileInfo) filepath.WalkFunc {
 	return func(path string, info os.FileInfo, err error) error {
 
 		if err != nil {
-			slog.Error("sql: Cannot visit files", "error", err)
+			log.Error().
+				Err(err).
+				Msg("sql: Cannot visit files")
 			return err
 		}
 

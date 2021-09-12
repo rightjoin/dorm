@@ -7,7 +7,7 @@ import (
 
 	"github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
-	log "github.com/rightjoin/slog"
+	"github.com/rs/zerolog/log"
 )
 
 func ToMap(dbo *gorm.DB, sql string, params ...interface{}) ([]map[string]interface{}, error) {
@@ -48,7 +48,10 @@ func ToMap(dbo *gorm.DB, sql string, params ...interface{}) ([]map[string]interf
 			// default:
 			// 	log.Info("Unknown type", "column", column.Name(), "type", column.ScanType())
 			// }
-			log.Info("Unknown type", "column", column.Name(), "type", column.ScanType())
+			log.Info().
+				Str("column", column.Name()).
+				Str("type", column.ScanType().String()).
+				Msg("Unknown type")
 
 			// Add val for array to be read
 			values[i] = val

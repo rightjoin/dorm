@@ -16,7 +16,7 @@ import (
 	"strings"
 
 	"github.com/rightjoin/fig"
-	log "github.com/rightjoin/slog"
+	"github.com/rs/zerolog/log"
 )
 
 type Media struct {
@@ -113,7 +113,10 @@ func NewMedia(f multipart.File, fh *multipart.FileHeader, entity, field string, 
 		// for S3 upload we only need folder-prefix/<model-name>/.... as path
 		s3Path := path[strings.Index(path, directory)+len(directory):]
 
-		log.Info("Uploading media to s3", "s3_path", s3Path, "directory", directory)
+		log.Info().
+			Str("s3_path", s3Path).
+			Str("directory", directory).
+			Msg("Uploading media to s3")
 
 		if err = UploadToS3(buf.Bytes(), s3Path, md.Mime, fsize); err != nil {
 			return nil, err

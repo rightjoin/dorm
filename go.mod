@@ -20,6 +20,7 @@ require (
 	github.com/rightjoin/fig v0.0.0-20200521110015-9948bdb67290
 	github.com/rightjoin/rutl v0.0.0-20210507181119-7ef56de97443
 	github.com/rightjoin/slog v0.0.0-20210509073124-a57f688bbd12
+	github.com/rs/zerolog v1.25.0 // indirect
 	github.com/serenize/snaker v0.0.0-20201027110005-a7ad2135616e // indirect
 	github.com/stretchr/testify v1.5.1
 	golang.org/x/sys v0.0.0-20210511113859-b0526f3d8744 // indirect
